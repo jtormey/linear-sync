@@ -1,0 +1,9 @@
+<h1>Teams:</h1>
+
+<ul>
+  <%= for team <- @teams do %>
+    <li>
+      <%= team["name"] %>
+    </li>
+  <% end %>
+</ul>
