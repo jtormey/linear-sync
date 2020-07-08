@@ -7,7 +7,7 @@
 
     <%= form_for @changeset, Routes.session_path(@conn, :create), fn f -> %>
       <div class="mb-4">
-        <%= text_input f, :api_key, class: "el-input focus:shadow-outline-gray", placeholder: "Enter a new Linear API key..." %>
+        <%= password_input f, :api_key, class: "el-input focus:shadow-outline-gray", placeholder: "Enter a new Linear API key..." %>
         <%= error_tag f, :api_key %>
       </div>
       <button type="submit" name="button" class="el-button">
