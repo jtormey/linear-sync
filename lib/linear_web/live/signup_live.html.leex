@@ -1,0 +1,17 @@
+<div class="h-full flex flex-col items-center justify-center">
+  <div class="w-1/3 -mt-64">
+    <div class="pb-8 mb-8 border-b border-dark-200 text-center">
+      <span class="text-indigo-500 text-4xl">⇄</span>
+      <h1 class="text-white text-2xl">LinearSync</h1>
+    </div>
+
+    <%= form_for :signup, "#", [phx_submit: "signup"], fn f -> %>
+      <div class="mb-4">
+        <%= text_input f, :api_key, class: "el-input focus:shadow-outline-gray", placeholder: "Enter a new Linear API key..." %>
+      </div>
+      <button type="submit" name="button" class="el-button">
+        Continue with API key
+      </button>
+    <% end %>
+  </div>
+</div>

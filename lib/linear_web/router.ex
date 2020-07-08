@@ -17,6 +17,7 @@ defmodule LinearWeb.Router do
   scope "/", LinearWeb do
     pipe_through :browser
 
+    live "/", SignupLive, :index
     live "/me", CreateIssueLive, :index
   end
 

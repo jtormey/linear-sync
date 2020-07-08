@@ -6,6 +6,19 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  background: linear-gradient(rgb(48, 50, 54) 0%, rgb(31, 32, 35) 50%);
+  overflow: hidden;
+}
+
+.el-input {
+  @apply w-full p-4 bg-dark-100 text-dark-600 text-xs border border-dark-300 rounded outline-none;
+}
+
+.el-button {
+  @apply w-full p-4 bg-dark-200 text-dark-600 text-xs border border-dark-300 rounded outline-none;
+}
+
 /* LiveView specific classes for your customizations */
 .invalid-feedback {
   color: #a94442;
