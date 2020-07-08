@@ -94,5 +94,5 @@ defmodule Linear.LinearAPI do
   def process_request_url(url), do: @base_url <> url
 
   @impl true
-  def process_response_body(body), do: Jason.decode!(IO.inspect body)
+  def process_response_body(body), do: Jason.decode!(body)
 end
