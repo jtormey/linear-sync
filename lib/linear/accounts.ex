@@ -37,6 +37,8 @@ defmodule Linear.Accounts do
   """
   def get_account!(id), do: Repo.get!(Account, id)
 
+  def get_account_by(opts), do: Repo.get_by(Account, opts)
+
   @doc """
   Creates a account.
 

@@ -16,5 +16,6 @@ defmodule Linear.Accounts.Account do
     account
     |> cast(attrs, [:api_key])
     |> validate_required([:api_key])
+    |> unique_constraint(:api_key, name: :accounts_api_key_index)
   end
 end

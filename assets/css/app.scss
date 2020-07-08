@@ -21,9 +21,9 @@ body {
 
 /* LiveView specific classes for your customizations */
 .invalid-feedback {
+  @apply text-sm text-right;
   color: #a94442;
   display: block;
-  margin: -1rem 0 2rem;
 }
 
 .phx-no-feedback.invalid-feedback, .phx-no-feedback .invalid-feedback {

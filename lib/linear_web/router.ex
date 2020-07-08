@@ -17,7 +17,7 @@ defmodule LinearWeb.Router do
   scope "/", LinearWeb do
     pipe_through :browser
 
-    live "/", SignupLive, :index
+    resources "/", SignupController, only: [:index, :create]
     live "/me", CreateIssueLive, :index
   end
 
