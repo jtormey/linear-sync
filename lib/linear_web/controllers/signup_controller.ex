@@ -5,9 +5,15 @@ defmodule LinearWeb.SignupController do
   alias Linear.Accounts.Account
 
   def index(conn, _params) do
-    conn
-    |> assign(:changeset, Accounts.change_account(%Account{}))
-    |> render("index.html")
+    case get_session(conn, :account_id) do
+      nil ->
+        conn
+        |> assign(:changeset, Accounts.change_account(%Account{}))
+        |> render("index.html")
+
+      _account_id ->
+        redirect(conn, to: Routes.dashboard_path(conn, :index))
+    end
   end
 
   def create(conn, %{"account" => %{"api_key" => api_key} = account_attrs}) do
@@ -26,9 +32,15 @@ defmodule LinearWeb.SignupController do
     end
   end
 
+  def delete(conn, _params) do
+    conn
+    |> delete_session(:account_id)
+    |> redirect(to: Routes.signup_path(conn, :index))
+  end
+
   def handle_account(conn, account = %Account{}) do
     conn
     |> put_session(:account_id, account.id)
-    |> redirect(to: Routes.create_issue_path(conn, :index))
+    |> redirect(to: Routes.dashboard_path(conn, :index))
   end
 end

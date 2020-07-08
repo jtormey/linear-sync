@@ -17,7 +17,10 @@ defmodule LinearWeb.Router do
   scope "/", LinearWeb do
     pipe_through :browser
 
-    resources "/", SignupController, only: [:index, :create]
+    resources "/", SignupController, only: [:index]
+    resources "/", SignupController, only: [:create, :delete], singleton: true
+
+    live "/account", DashboardLive, :index
     live "/me", CreateIssueLive, :index
   end
 
