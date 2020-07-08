@@ -10,6 +10,13 @@ use Mix.Config
 config :linear,
   ecto_repos: [Linear.Repo]
 
+config :linear, :generators,
+  binary_id: true
+
+config :linear, Linear.Repo,
+  migration_primary_key: [name: :id, type: :binary_id],
+  migration_timestamps: [type: :utc_datetime]
+
 # Configures the endpoint
 config :linear, LinearWeb.Endpoint,
   url: [host: "localhost"],
