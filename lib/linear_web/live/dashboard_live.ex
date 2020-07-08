@@ -9,6 +9,6 @@ defmodule LinearWeb.DashboardLive do
   end
 
   def mount(_params, _session, socket) do
-    {:ok, redirect(socket, to: Routes.signup_path(socket, :index))}
+    {:ok, redirect(socket, to: Routes.session_path(socket, :index))}
   end
 end

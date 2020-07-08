@@ -3,4 +3,4 @@
 <p>Account ID: <%= @account.id %></p>
 <p>Account API Key: <%= @account.api_key %></p>
 
-<%= link "Sign out", to: Routes.signup_path(@socket, :delete), method: :delete %>
+<%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>

@@ -5,7 +5,7 @@
       <h1 class="text-white text-2xl">LinearSync</h1>
     </div>
 
-    <%= form_for @changeset, Routes.signup_path(@conn, :create), fn f -> %>
+    <%= form_for @changeset, Routes.session_path(@conn, :create), fn f -> %>
       <div class="mb-4">
         <%= text_input f, :api_key, class: "el-input focus:shadow-outline-gray", placeholder: "Enter a new Linear API key..." %>
         <%= error_tag f, :api_key %>

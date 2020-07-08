@@ -1,4 +1,4 @@
-defmodule LinearWeb.SignupController do
+defmodule LinearWeb.SessionController do
   use LinearWeb, :controller
 
   alias Linear.Accounts
@@ -35,7 +35,7 @@ defmodule LinearWeb.SignupController do
   def delete(conn, _params) do
     conn
     |> delete_session(:account_id)
-    |> redirect(to: Routes.signup_path(conn, :index))
+    |> redirect(to: Routes.session_path(conn, :index))
   end
 
   def handle_account(conn, account = %Account{}) do
