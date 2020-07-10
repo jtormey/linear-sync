@@ -6,6 +6,7 @@ defmodule Linear.Integrations do
   import Ecto.Query, warn: false
   alias Linear.Repo
 
+  alias Linear.Accounts.Account
   alias Linear.Integrations.PublicEntry
 
   @doc """
@@ -49,9 +50,9 @@ defmodule Linear.Integrations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_public_entry(attrs \\ %{}) do
+  def create_public_entry(account = %Account{}, attrs \\ %{}) do
     %PublicEntry{}
-    |> PublicEntry.changeset(attrs)
+    |> PublicEntry.changeset(account, attrs)
     |> Repo.insert()
   end
 
@@ -67,9 +68,9 @@ defmodule Linear.Integrations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_public_entry(%PublicEntry{} = public_entry, attrs) do
+  def update_public_entry(%PublicEntry{} = public_entry, account = %Account{}, attrs) do
     public_entry
-    |> PublicEntry.changeset(attrs)
+    |> PublicEntry.changeset(account, attrs)
     |> Repo.update()
   end
 
@@ -98,7 +99,7 @@ defmodule Linear.Integrations do
       %Ecto.Changeset{data: %PublicEntry{}}
 
   """
-  def change_public_entry(%PublicEntry{} = public_entry, attrs \\ %{}) do
-    PublicEntry.changeset(public_entry, attrs)
+  def change_public_entry(%PublicEntry{} = public_entry, account = %Account{}, attrs \\ %{}) do
+    PublicEntry.changeset(public_entry, account, attrs)
   end
 end

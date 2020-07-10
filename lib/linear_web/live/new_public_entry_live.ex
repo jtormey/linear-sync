@@ -1,6 +1,7 @@
 defmodule LinearWeb.NewPublicEntryLive do
   use LinearWeb, :live_view
 
+  alias Linear.Repo
   alias Linear.Accounts
   alias Linear.Integrations
   alias Linear.Integrations.PublicEntry
@@ -9,40 +10,55 @@ defmodule LinearWeb.NewPublicEntryLive do
   @impl true
   def mount(_params, %{"account_id" => account_id}, socket) do
     account = Accounts.get_account!(account_id)
-    session = LinearAPI.Session.new()
+    session = LinearAPI.Session.new(account.api_key)
 
+    {:ok, %{"data" => %{"viewer" => viewer}}} = LinearAPI.viewer(session)
     {:ok, %{"data" => %{"teams" => %{"nodes" => teams}}}} = LinearAPI.teams(session)
 
     socket = socket
     |> assign(:account, account)
     |> assign(:session, session)
-    |> assign(:open_menu, nil)
-    |> assign(:teams, Enum.map(teams, fn %{"id" => id, "name" => name} -> [value: id, key: name] end))
+    |> assign(:viewer, viewer)
+    |> assign(:teams, Enum.map(teams, &decode_kv/1))
     |> assign(:labels, [])
     |> assign(:states, [])
     |> assign(:projects, [])
-    |> assign(:changeset, Integrations.change_public_entry(%PublicEntry{}))
+    |> assign(:changeset, Integrations.change_public_entry(%PublicEntry{}, account))
 
     {:ok, socket}
   end
 
   @impl true
-  def handle_event("validate", %{"public_entry" => %{"team" => team_id}}, socket) do
-    socket = load_data(socket, team_id)
+  def handle_event("validate", %{"public_entry" => attrs}, socket) do
+    socket = socket
+    |> load_team(attrs["team_id"])
+    |> assign(:changeset, PublicEntry.changeset(%PublicEntry{}, socket.assigns.account, attrs))
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("open_menu", params = %{"menu_id" => menu_id}, socket) do
-    IO.inspect params
-    {:noreply, assign(socket, :open_menu, menu_id)}
+  def handle_event("submit", _params, socket) do
+    case Repo.insert(socket.assigns.changeset) do
+      {:ok, _public_entry} ->
+        {:noreply, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, :changeset, changeset)}
+    end
   end
 
-  def load_data(socket, ""), do: socket
+  def load_team(socket, "") do
+    socket
+    |> assign(:team_id, nil)
+    |> assign(:labels, [])
+    |> assign(:states, [])
+    |> assign(:projects, [])
+  end
 
-  def load_data(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
+  def load_team(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
 
-  def load_data(socket, team_id) do
+  def load_team(socket, team_id) do
     {:ok, %{"data" => %{"team" => result}}} = LinearAPI.new_public_entry_data(socket.assigns.session, team_id)
 
     socket

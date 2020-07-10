@@ -38,15 +38,6 @@ defmodule Linear.LinearAPI do
             completedAt
           }
         }
-        cycles {
-          nodes {
-            id
-            name
-            number
-            startsAt
-            endsAt
-          }
-        }
       }
     }
     """
