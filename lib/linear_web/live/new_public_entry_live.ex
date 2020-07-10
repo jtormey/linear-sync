@@ -12,8 +12,7 @@ defmodule LinearWeb.NewPublicEntryLive do
     account = Accounts.get_account!(account_id)
     session = LinearAPI.Session.new(account.api_key)
 
-    {:ok, %{"data" => %{"viewer" => viewer}}} = LinearAPI.viewer(session)
-    {:ok, %{"data" => %{"teams" => %{"nodes" => teams}}}} = LinearAPI.teams(session)
+    {:ok, %{"data" => %{"viewer" => viewer, "teams" => %{"nodes" => teams}}}} = LinearAPI.viewer_teams(session)
 
     socket = socket
     |> assign(:account, account)

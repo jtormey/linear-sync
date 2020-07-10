@@ -68,6 +68,24 @@ defmodule Linear.LinearAPI do
     """
   end
 
+  def viewer_teams(session = %Session{}) do
+    graphql session, """
+    query {
+      viewer {
+        id
+        name
+        email
+      }
+      teams {
+        nodes {
+          id
+          name
+        }
+      }
+    }
+    """
+  end
+
   def issue(session = %Session{}, issue_id) do
     graphql session, """
     query {
