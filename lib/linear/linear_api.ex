@@ -10,6 +10,48 @@ defmodule Linear.LinearAPI do
 
   @base_url "https://api.linear.app"
 
+  def new_public_entry_data(session = %Session{}, team_id) do
+    graphql session, """
+    query {
+      team(id: "#{team_id}") {
+        labels {
+          nodes {
+            id
+            name
+            archivedAt
+          }
+        }
+        states {
+          nodes {
+            id
+            name
+            description
+            archivedAt
+          }
+        }
+        projects {
+          nodes {
+            id
+            name
+            color
+            archivedAt
+            completedAt
+          }
+        }
+        cycles {
+          nodes {
+            id
+            name
+            number
+            startsAt
+            endsAt
+          }
+        }
+      }
+    }
+    """
+  end
+
   def viewer(session = %Session{}) do
     graphql session, """
     query {

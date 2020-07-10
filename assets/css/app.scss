@@ -7,7 +7,7 @@
 @tailwind utilities;
 
 body {
-  background: linear-gradient(rgb(48, 50, 54) 0%, rgb(31, 32, 35) 50%);
+  background: rgb(31, 32, 35); // linear-gradient(rgb(48, 50, 54) 0%, rgb(31, 32, 35) 50%);
   overflow: hidden;
 }
 

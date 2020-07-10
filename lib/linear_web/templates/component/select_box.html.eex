@@ -1,0 +1,12 @@
+<div style="transform: translate(8rem, 2px);" class="absolute top-0 right-0 bg-dark-300 py-1 rounded shadow-lg">
+  <div class="text-dark-500 text-sm px-4 mb-1">
+    <%= @title %>
+  </div>
+  <ul>
+    <%= for option <- @options do %>
+      <li class="text-dark-600 text-sm hover:bg-dark-200 transition-bg duration-200 px-4 py-1 cursor-pointer">
+        <%= option %>
+      </li>
+    <% end %>
+  </ul>
+</div>

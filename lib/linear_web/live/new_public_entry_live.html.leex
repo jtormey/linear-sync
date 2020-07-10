@@ -1,0 +1,89 @@
+<div class="text-dark-600 my-4">
+  <%= live_redirect "← Back to account", to: Routes.dashboard_path(@socket, :index) %>
+</div>
+
+<!-- <div class="text-white">
+  <p>plan</p>
+  <ol>
+    <li>select team</li>
+    <li>select default label</li>
+    <li>select default status</li>
+    <li>select default project</li>
+    <li>auto assign self?</li>
+    <li>put in active cycle?</li>
+  </ol>
+</div> -->
+
+<div class="w-1/2 h-64 mx-auto mt-32">
+  <%= form_for @changeset, "#", [phx_change: "validate", phx_submit: "submit"], fn f -> %>
+    <div class="border-b border-dark-300 pb-8 mb-8">
+      <%= text_input f, :name, placeholder: "Choose a name...", class: "text-white text-2xl bg-transparent w-full outline-none" %>
+    </div>
+
+    <div class="mb-4">
+      <span class="text-white">
+        Configure
+      </span>
+    </div>
+
+    <div class="bg-dark-150 px-4 py-6 mb-8">
+      <div class="flex flex-row items-center mb-3">
+        <div class="px-4 py-1 w-24">
+          <label class="text-dark-500 text-sm">Team</label>
+        </div>
+        <div class="relative">
+          <div class="pl-6 pr-20 py-1 cursor-pointer border-2 border-transparent hover:border-dark-200 rounded hover:bg-dark-100 transition-bg duration-100" phx-click="open_menu" phx-value-menu_id="set_team">
+            <span class="text-dark-600 text-sm">
+              No team
+            </span>
+          </div>
+          <%= if @open_menu == "set_team" do %>
+            <%= render LinearWeb.ComponentView, "select_box.html", title: "Set team!", options: ["93software!"] %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="flex flex-row items-center mb-3">
+        <div class="px-4 py-1 w-24">
+          <label class="text-dark-500 text-sm">Status</label>
+        </div>
+        <div class="relative">
+          <div class="pl-6 pr-20 py-1 cursor-pointer border border-transparent hover:border-dark-200 rounded hover:bg-dark-100 transition-bg duration-100">
+            <span class="text-dark-600 text-sm">
+              No status
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-row items-center mb-3">
+        <div class="px-4 py-1 w-24">
+          <label class="text-dark-500 text-sm">Label</label>
+        </div>
+        <div class="pl-6 pr-20 py-1 cursor-pointer border border-transparent hover:border-dark-200 rounded hover:bg-dark-100 transition-bg duration-100">
+          <span class="text-dark-600 text-sm">
+            No label
+          </span>
+        </div>
+      </div>
+
+      <div class="">
+        <%= select f, :team, @teams, prompt: "Select team", class: "w-full p-4 bg-dark-100 text-dark-600 text-xs border border-dark-300 rounded outline-none" %>
+      </div>
+
+      <div class="">
+        <%= select f, :label, @labels, prompt: "Select label", class: "w-full p-4 bg-dark-100 text-dark-600 text-xs border border-dark-300 rounded outline-none", disabled: Enum.empty?(@labels) %>
+      </div>
+
+      <div class="">
+        <%= select f, :state, @states, prompt: "Select state", class: "w-full p-4 bg-dark-100 text-dark-600 text-xs border border-dark-300 rounded outline-none", disabled: Enum.empty?(@states) %>
+      </div>
+
+      <div class="">
+        <%= select f, :project, @projects, prompt: "Select project", class: "w-full p-4 bg-dark-100 text-dark-600 text-xs border border-dark-300 rounded outline-none", disabled: Enum.empty?(@projects) %>
+      </div>
+    </div>
+
+    <%= submit "Create public entry", class: "el-button" %>
+  <% end %>
+</div>

@@ -3,4 +3,6 @@
 <p>Account ID: <%= @account.id %></p>
 <p>Account API Key: <%= @account.api_key %></p>
 
+<%= live_redirect "Create public issue board", to: Routes.new_public_entry_path(@socket, :index), class: "el-button" %>
+
 <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>

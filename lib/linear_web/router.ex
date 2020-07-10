@@ -21,6 +21,7 @@ defmodule LinearWeb.Router do
     resources "/", SessionController, only: [:create, :delete], singleton: true
 
     live "/account", DashboardLive, :index
+    live "/account/public-entry/new", NewPublicEntryLive, :index
     live "/me", CreateIssueLive, :index
   end
 
