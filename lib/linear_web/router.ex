@@ -22,7 +22,7 @@ defmodule LinearWeb.Router do
 
     live "/account", DashboardLive, :index
     live "/account/public-entry/new", NewPublicEntryLive, :index
-    live "/me", CreateIssueLive, :index
+    live "/issue/:param", CreateIssueLive, :index
   end
 
   # Other scopes may use custom stacks.

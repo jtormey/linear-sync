@@ -14,12 +14,14 @@ defmodule Linear.Integrations do
 
   ## Examples
 
-      iex> list_public_entries()
+      iex> list_public_entries(account)
       [%PublicEntry{}, ...]
 
   """
-  def list_public_entries do
-    Repo.all(PublicEntry)
+  def list_public_entries(account = %Account{}) do
+    Repo.all from p in PublicEntry,
+      where: [account_id: ^account.id],
+      order_by: {:desc, :inserted_at}
   end
 
   @doc """
@@ -37,6 +39,10 @@ defmodule Linear.Integrations do
 
   """
   def get_public_entry!(id), do: Repo.get!(PublicEntry, id)
+
+  def get_public_entry_from_param!(param) do
+    Repo.get_by!(PublicEntry, external_id: PublicEntry.from_param(param))
+  end
 
   @doc """
   Creates a public_entry.

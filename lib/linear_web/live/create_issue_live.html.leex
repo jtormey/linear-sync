@@ -1,9 +1,9 @@
-<h1>Teams:</h1>
+<h1 class="text-white">
+  <%= @public_entry.name %>
+</h1>
 
-<ul>
-  <%= for team <- @teams do %>
-    <li>
-      <%= team["name"] %>
-    </li>
-  <% end %>
-</ul>
+<%= form_for :issue, "#", [phx_submit: "submit"], fn f -> %>
+  <%= text_input f, :title, class: "el-input", placeholder: "Title" %>
+  <%= textarea f, :description, class: "el-input", placeholder: "Description" %>
+  <%= submit "Create issue", class: "el-button" %>
+<% end %>

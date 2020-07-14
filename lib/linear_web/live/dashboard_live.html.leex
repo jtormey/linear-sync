@@ -6,3 +6,16 @@
 <%= live_redirect "Create public issue board", to: Routes.new_public_entry_path(@socket, :index), class: "el-button" %>
 
 <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>
+
+
+<div class="">
+  <ul>
+    <%= for public_entry <- @public_entries do %>
+      <li class="p-6 text-white bg-dark-200">
+        <%= public_entry.name %>
+        <%= link "View public", to: Routes.create_issue_path(@socket, :index, public_entry) %>
+      </li>
+    <% end %>
+  </ul>
+
+</div>
