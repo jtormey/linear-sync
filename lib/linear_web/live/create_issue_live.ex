@@ -7,9 +7,12 @@ defmodule LinearWeb.CreateIssueLive do
   alias Linear.Integrations
 
   @impl true
-  def mount(%{"param" => param}, _params, socket) do
-    public_entry = Integrations.get_public_entry_from_param!(param)
-    {:ok, assign(socket, public_entry: public_entry)}
+  def mount(%{"param" => param}, params, socket) do
+    socket = socket
+    |> assign(:public_entry, Integrations.get_public_entry_from_param!(param))
+    |> assign(:signed_in?, params["account_id"] != nil)
+
+    {:ok, socket}
   end
 
   @impl true
@@ -19,11 +22,14 @@ defmodule LinearWeb.CreateIssueLive do
     account = Accounts.get_account!(public_entry.account_id)
     session = LinearAPI.Session.new(account)
 
-    {:ok, %{"data" => %{"issueCreate" => %{"issue" => issue}}}} =
+    {:ok, %{"data" => %{"issueCreate" => %{"issue" => issue_attrs}}}} =
       LinearAPI.create_issue(session, public_entry.team_id, attrs["title"], attrs["description"])
 
-    IO.inspect(issue)
-    # %{"description" => "", "id" => "99f763d2-83d0-4053-9083-f63791f3e541", "title" => "Public create"}
+    {:ok, _ln_issue} = Integrations.create_ln_issue(public_entry, issue_attrs)
+
+    socket = socket
+    |> put_flash(:info, "Successfully created issue")
+    |> redirect(to: Routes.create_issue_path(socket, :index, public_entry))
 
     {:noreply, socket}
   end

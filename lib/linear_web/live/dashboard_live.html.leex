@@ -14,8 +14,23 @@
       <li class="p-6 text-white bg-dark-200">
         <%= public_entry.name %>
         <%= link "View public", to: Routes.create_issue_path(@socket, :index, public_entry) %>
+
+        <button type="button" name="button" phx-click="show_created" phx-value-public_entry_id="<%= public_entry.id %>">
+          Show created issues
+        </button>
+
+        <%= if MapSet.member?(@shown_issues, public_entry.id) do %>
+          <p>Issues</p>
+          <ul class="">
+            <%= for ln_issue <- Map.get(@issue_groups, public_entry.id, []) do %>
+              <li>
+                <%= ln_issue.number %>
+                <%= ln_issue.title %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
       </li>
     <% end %>
   </ul>
-
 </div>

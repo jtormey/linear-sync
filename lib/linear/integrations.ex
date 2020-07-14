@@ -108,4 +108,74 @@ defmodule Linear.Integrations do
   def change_public_entry(%PublicEntry{} = public_entry, account = %Account{}, attrs \\ %{}) do
     PublicEntry.changeset(public_entry, account, attrs)
   end
+
+  alias Linear.Integrations.LnIssue
+
+  @doc """
+  Returns the ln_issues for an account, grouped by public_entry_id.
+
+  ## Examples
+
+      iex> group_ln_issues(account)
+      %{1 => [%LnIssue{}, ...], ...}
+
+  """
+  def group_ln_issues(account = %Account{}) do
+    ln_issues = Repo.all from l in LnIssue,
+      join: p in PublicEntry, on: [id: l.public_entry_id],
+      where: p.account_id == ^account.id,
+      order_by: {:desc, :inserted_at}
+
+    Enum.group_by(ln_issues, & &1.public_entry_id)
+  end
+
+  @doc """
+  Gets a single ln_issue.
+
+  Raises `Ecto.NoResultsError` if the Ln issue does not exist.
+
+  ## Examples
+
+      iex> get_ln_issue!(123)
+      %LnIssue{}
+
+      iex> get_ln_issue!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_ln_issue!(id), do: Repo.get!(LnIssue, id)
+
+  @doc """
+  Creates a ln_issue.
+
+  ## Examples
+
+      iex> create_ln_issue(%{field: value})
+      {:ok, %LnIssue{}}
+
+      iex> create_ln_issue(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_ln_issue(public_entry = %PublicEntry{}, attrs \\ %{}) do
+    %LnIssue{}
+    |> LnIssue.changeset(public_entry, attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Deletes a ln_issue.
+
+  ## Examples
+
+      iex> delete_ln_issue(ln_issue)
+      {:ok, %LnIssue{}}
+
+      iex> delete_ln_issue(ln_issue)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_ln_issue(%LnIssue{} = ln_issue) do
+    Repo.delete(ln_issue)
+  end
 end

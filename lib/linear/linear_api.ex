@@ -105,8 +105,10 @@ defmodule Linear.LinearAPI do
         success
         issue {
           id
+          number
           title
           description
+          url
         }
       }
     }
