@@ -1,0 +1,10 @@
+<div class="h-full flex flex-col items-center justify-center">
+  <div class="w-1/3 -mt-64">
+    <p class="text-dark-500 text-sm text-center mb-4">
+      Successfully linked your GitHub!
+    </p>
+    <button type="button" name="button" class="el-button" onclick="window.close();">
+      Close window
+    </button>
+  </div>
+</div>

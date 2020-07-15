@@ -41,6 +41,6 @@ defmodule LinearWeb.SessionController do
   def handle_account(conn, account = %Account{}) do
     conn
     |> put_session(:account_id, account.id)
-    |> redirect(to: Routes.dashboard_path(conn, :index))
+    |> redirect(to: Routes.link_github_path(conn, :index))
   end
 end

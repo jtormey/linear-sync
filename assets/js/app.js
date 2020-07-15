@@ -17,8 +17,28 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
+const hooks = {}
+hooks['popup_window'] = {
+  windowUrl () {
+    return this.el.getAttribute('data-window-url')
+  },
+  eventName () {
+    return this.el.getAttribute('data-event')
+  },
+  mounted () {
+    let windowOptions = [
+      'height=780', 'width=1012', 'resizable=yes', 'scrollbars=yes',
+      'toolbar=yes', 'menubar=no', 'location=no', 'directories=no', 'status=yes'
+    ]
+    this.el.addEventListener('click', () => {
+      window.open(this.windowUrl(), 'popUpWindow', windowOptions.join(','))
+      if (this.eventName()) this.pushEvent(this.eventName(), {})
+    })
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let liveSocket = new LiveSocket("/live", Socket, {hooks, params: {_csrf_token: csrfToken}})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())

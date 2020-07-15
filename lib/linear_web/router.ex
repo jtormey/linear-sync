@@ -17,8 +17,14 @@ defmodule LinearWeb.Router do
   scope "/", LinearWeb do
     pipe_through :browser
 
+    get "/auth/github", AuthGithubController, :auth
+    get "/auth/github/callback", AuthGithubController, :callback
+    get "/auth/github/done", AuthGithubController, :done
+
     resources "/", SessionController, only: [:index]
     resources "/", SessionController, only: [:create, :delete], singleton: true
+
+    live "/link/github", LinkGithubLive, :index
 
     live "/account", DashboardLive, :index
     live "/account/public-entry/new", NewPublicEntryLive, :index

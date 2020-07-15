@@ -1,0 +1,23 @@
+<div class="h-full flex flex-col items-center justify-center">
+  <div class="w-1/3 -mt-64">
+    <div class="pb-8 mb-8 border-b border-dark-200 text-center">
+      <span class="text-indigo-500 text-4xl">⇄</span>
+      <h1 class="text-white text-2xl">LinearSync</h1>
+    </div>
+
+    <p class="text-dark-500 text-sm mb-8">
+      LinearSync needs to connect to your GitHub account in order to sync issues
+      between Linear and GitHub. You will have full control over this process.
+    </p>
+
+    <%= if @linking? do %>
+      <button type="button" name="button" class="el-button" disabled>
+        Linking in progress...
+      </button>
+    <% else %>
+      <button type="button" name="button" class="el-button" phx-hook="popup_window" data-event="link_start" data-window-url="<%= Routes.auth_github_path(@socket, :auth) %>">
+        Link GitHub account
+      </button>
+    <% end %>
+  </div>
+</div>
