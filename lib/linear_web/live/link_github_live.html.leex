@@ -15,7 +15,7 @@
         Linking in progress...
       </button>
     <% else %>
-      <button type="button" name="button" class="el-button" phx-hook="popup_window" data-event="link_start" data-window-url="<%= Routes.auth_github_path(@socket, :auth) %>">
+      <button type="button" name="button" class="el-button" phx-hook="popup_window" data-event="link_start" data-window-url="<%= Routes.auth_github_path(@socket, :auth) %>" data-window-title="Link GitHub">
         Link GitHub account
       </button>
     <% end %>

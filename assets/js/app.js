@@ -22,16 +22,25 @@ hooks['popup_window'] = {
   windowUrl () {
     return this.el.getAttribute('data-window-url')
   },
+  windowTitle () {
+    return this.el.getAttribute('data-window-title')
+  },
   eventName () {
     return this.el.getAttribute('data-event')
   },
   mounted () {
+    let h = 780
+    let w = 1020
+    let y = window.top.outerHeight / 2 + window.top.screenY - (h / 2)
+    let x = window.top.outerWidth / 2 + window.top.screenX - (w / 2)
+
     let windowOptions = [
-      'height=780', 'width=1012', 'resizable=yes', 'scrollbars=yes',
+      `height=${h}`, `width=${w}`, `top=${y}`, `left=${x}`, 'resizable=yes', 'scrollbars=yes',
       'toolbar=yes', 'menubar=no', 'location=no', 'directories=no', 'status=yes'
     ]
+
     this.el.addEventListener('click', () => {
-      window.open(this.windowUrl(), 'popUpWindow', windowOptions.join(','))
+      window.open(this.windowUrl(), this.windowTitle(), windowOptions.join(','))
       if (this.eventName()) this.pushEvent(this.eventName(), {})
     })
   }
