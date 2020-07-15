@@ -6,66 +6,38 @@ defmodule Linear.LinearAPI do
   use HTTPoison.Base
 
   alias HTTPoison.Response
+  alias GraphqlBuilder.Query
   alias __MODULE__.Session
 
   @base_url "https://api.linear.app"
 
   def new_public_entry_data(session = %Session{}, team_id) do
-    graphql session, """
-    query {
-      team(id: "#{team_id}") {
-        labels {
-          nodes {
-            id
-            name
-            archivedAt
-          }
-        }
-        states {
-          nodes {
-            id
-            name
-            description
-            archivedAt
-          }
-        }
-        projects {
-          nodes {
-            id
-            name
-            color
-            archivedAt
-            completedAt
-          }
-        }
-      }
+    query = %Query{
+      operation: :team,
+      variables: [id: team_id],
+      fields: [
+        labels: [nodes: [:id, :name, :archivedAt]],
+        states: [nodes: [:id, :name, :description, :archivedAt]],
+        projects: [nodes: [:id, :name, :color, :archivedAt, :completedAt]],
+      ]
     }
-    """
+    graphql session, GraphqlBuilder.query(query)
   end
 
   def viewer(session = %Session{}) do
-    graphql session, """
-    query {
-      viewer {
-        id
-        name
-        email
-      }
+    query = %Query{
+      operation: :viewer,
+      fields: [:id, :name, :email]
     }
-    """
+    graphql session, GraphqlBuilder.query(query)
   end
 
   def teams(session = %Session{}) do
-    graphql session, """
-    query {
-      teams {
-        nodes {
-          id
-          name
-        }
-      }
+    query = %Query{
+      operation: :teams,
+      fields: [nodes: [:id, :name]]
     }
-    """
+    graphql session, GraphqlBuilder.query(query)
   end
 
   def viewer_teams(session = %Session{}) do
@@ -87,47 +59,36 @@ defmodule Linear.LinearAPI do
   end
 
   def issue(session = %Session{}, issue_id) do
-    graphql session, """
-    query {
-      issue(id: "#{issue_id}") {
-        id
-        title
-        description
-      }
+    query = %Query{
+      operation: :issue,
+      variables: [id: issue_id],
+      fields: [:id, :title, :description]
     }
-    """
+    graphql session, GraphqlBuilder.query(query)
   end
 
   def create_issue(session = %Session{}, team_id, title, description) do
-    graphql session, """
-    mutation {
-      issueCreate(input: { title: "#{title}", description: "#{description}", teamId: "#{team_id}" }) {
-        success
-        issue {
-          id
-          number
-          title
-          description
-          url
-        }
-      }
+    query = %Query{
+      operation: :issueCreate,
+      variables: [input: [teamId: team_id, title: title, description: description]],
+      fields: [
+        :success,
+        issue: [:id, :number, :title, :description, :url]
+      ]
     }
-    """
+    graphql session, GraphqlBuilder.mutation(query)
   end
 
   def update_issue(session = %Session{}, issue_id, title, description) do
-    graphql session, """
-    mutation {
-      issueUpdate(id: "#{issue_id}", input: { title: "#{title}", description: "#{description}" }) {
-        success
-        issue {
-          id
-          title
-          description
-        }
-      }
+    query = %Query{
+      operation: :issueUpdate,
+      variables: [id: issue_id, input: [title: title, description: description]],
+      fields: [
+        :success,
+        issue: [:id, :number, :title, :description, :url]
+      ]
     }
-    """
+    graphql session, GraphqlBuilder.mutation(query)
   end
 
   defp graphql(session = %Session{}, query) when is_binary(query) do
