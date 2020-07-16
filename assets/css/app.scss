@@ -19,6 +19,10 @@ body {
   @apply w-full p-4 bg-dark-200 text-dark-600 text-xs border border-dark-300 rounded outline-none;
 }
 
+.el-button-slim {
+  @apply w-full px-4 py-2 bg-dark-200 text-dark-600 text-xs border border-dark-300 rounded outline-none;
+}
+
 /* LiveView specific classes for your customizations */
 .invalid-feedback {
   @apply text-sm text-right;

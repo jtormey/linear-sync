@@ -1,38 +1,35 @@
-<h1>Welcome!</h1>
+<div class="h-full flex flex-col items-center">
+  <div class="w-full sm:w-1/2 mt-16">
+    <div class="pb-4 mb-8 border-b border-dark-200 flex items-center justify-between">
+      <span class="flex items-center">
+        <span class="text-indigo-500 text-4xl">⇄</span>
+        <h1 class="text-white text-2xl ml-4 mb-1">LinearSync</h1>
+      </span>
+      <div class="">
+        <%= live_redirect "Create issue sync", to: Routes.new_issue_sync_path(@socket, :index), class: "el-button-slim" %>
+      </div>
+    </div>
 
-<p>Account ID: <%= @account.id %></p>
-<p>Account API Key: <%= @account.api_key %></p>
+    <div class="pb-8 mb-4 border-b border-dark-200">
+      <%= if Enum.empty?(@issue_syncs) do %>
+        <p class="text-dark-500 text-sm">
+          You don't have any issue syncs set up yet, create one to start syncing your issues between Linear and GitHub.
+        </p>
+      <% else %>
+        <ul>
+          <%= for issue_sync <- @issue_syncs do %>
+            <li class="mb-2 px-6 py-4 text-white bg-dark-200 rounded-sm flex items-center">
+              <%= issue_sync.source_name %>
+              <span class="text-indigo-500 text-xl mx-4">⇄</span>
+              <%= issue_sync.dest_name %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
 
-<%= live_redirect "Create public issue board", to: Routes.new_public_entry_path(@socket, :index), class: "el-button" %>
-
-<%= live_redirect "Create issue sync", to: Routes.new_issue_sync_path(@socket, :index), class: "el-button" %>
-
-<%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>
-
-
-<div class="">
-  <ul>
-    <%= for public_entry <- @public_entries do %>
-      <li class="p-6 text-white bg-dark-200">
-        <%= public_entry.name %>
-        <%= link "View public", to: Routes.create_issue_path(@socket, :index, public_entry) %>
-
-        <button type="button" name="button" phx-click="show_created" phx-value-public_entry_id="<%= public_entry.id %>">
-          Show created issues
-        </button>
-
-        <%= if MapSet.member?(@shown_issues, public_entry.id) do %>
-          <p>Issues</p>
-          <ul class="">
-            <%= for ln_issue <- Map.get(@issue_groups, public_entry.id, []) do %>
-              <li>
-                <%= ln_issue.number %>
-                <%= ln_issue.title %>
-              </li>
-            <% end %>
-          </ul>
-        <% end %>
-      </li>
-    <% end %>
-  </ul>
+    <div class="">
+      <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete, class: "text-dark-500 text-sm" %>
+    </div>
+  </div>
 </div>

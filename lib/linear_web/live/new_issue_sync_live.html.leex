@@ -2,7 +2,7 @@
   <%= live_redirect "← Back to account", to: Routes.dashboard_path(@socket, :index) %>
 </div>
 
-<div class="w-1/2 h-64 mx-auto mt-32">
+<div class="w-full sm:w-1/2 mx-auto mt-16">
   <%= form_for @changeset, "#", [phx_change: "validate", phx_submit: "submit"], fn f -> %>
     <div class="pb-8 mb-8 border-b border-dark-200">
       <span class="text-dark-600 text-2xl">Configure Issue Sync</span>
@@ -12,7 +12,7 @@
       LinearSync will use these options to sync issues between GitHub and Linear automatically.
     </p>
 
-    <div class="bg-dark-150 px-4 py-6 mb-8">
+    <div class="bg-dark-150 rounded-sm px-4 py-6 mb-8">
       <div class="px-4 py-4 flex items-center">
         <h3 class="text-dark-500 text-sm mr-4">
           GitHub options
