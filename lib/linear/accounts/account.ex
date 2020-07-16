@@ -7,6 +7,8 @@ defmodule Linear.Accounts.Account do
 
   schema "accounts" do
     field :api_key, :string
+    field :github_token, :string
+    field :github_link_state, :string
 
     timestamps()
   end

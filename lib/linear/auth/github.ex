@@ -14,9 +14,9 @@ defmodule Linear.Auth.Github do
     |> OAuth2.Client.put_serializer("application/json", Jason)
   end
 
-  def authorize_url!() do
+  def authorize_url!(state) do
     scope = fetch_env!(:scope)
-    OAuth2.Client.authorize_url!(client(), scope: format_scope(scope))
+    OAuth2.Client.authorize_url!(client(), scope: format_scope(scope), state: state)
   end
 
   def get_token!(params \\ [], headers \\ [], opts \\ []) do

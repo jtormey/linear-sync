@@ -75,6 +75,13 @@ defmodule Linear.Accounts do
     |> Repo.update()
   end
 
+  def update_account_github_link(%Account{} = account, attrs) do
+    account
+    |> Ecto.Changeset.cast(attrs, [:github_token, :github_link_state])
+    |> Repo.update()
+    |> broadcast(:github_link)
+  end
+
   @doc """
   Deletes a account.
 
@@ -103,4 +110,15 @@ defmodule Linear.Accounts do
   def change_account(%Account{} = account, attrs \\ %{}) do
     Account.changeset(account, attrs)
   end
+
+  def subscribe(account = %Account{}) do
+    Phoenix.PubSub.subscribe(Linear.PubSub, "account:#{account.id}")
+  end
+
+  def broadcast({:ok, account = %Account{}}, type) do
+    Phoenix.PubSub.broadcast(Linear.PubSub, "account:#{account.id}", {type, account})
+    {:ok, account}
+  end
+
+  def broadcast({:error, _} = error, _type), do: error
 end
