@@ -49,7 +49,8 @@ defmodule Linear.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:httpoison, "~> 1.7"},
       {:graphql_builder, "~> 0.1"},
-      {:oauth2, "~> 2.0"}
+      {:oauth2, "~> 2.0"},
+      {:tentacat, "~> 2.0"}
     ]
   end
 

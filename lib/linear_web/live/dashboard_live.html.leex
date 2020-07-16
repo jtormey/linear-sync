@@ -5,6 +5,8 @@
 
 <%= live_redirect "Create public issue board", to: Routes.new_public_entry_path(@socket, :index), class: "el-button" %>
 
+<%= live_redirect "Create issue sync", to: Routes.new_issue_sync_path(@socket, :index), class: "el-button" %>
+
 <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>
 
 

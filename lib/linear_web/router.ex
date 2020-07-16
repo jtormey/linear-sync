@@ -28,6 +28,7 @@ defmodule LinearWeb.Router do
 
     live "/account", DashboardLive, :index
     live "/account/public-entry/new", NewPublicEntryLive, :index
+    live "/account/issue-sync/new", NewIssueSyncLive, :index
     live "/issue/:param", CreateIssueLive, :index
   end
 
