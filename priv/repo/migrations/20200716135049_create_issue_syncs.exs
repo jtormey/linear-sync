@@ -14,7 +14,7 @@ defmodule Linear.Repo.Migrations.CreateIssueSyncs do
       add :project_id, :binary_id
       add :self_assign, :boolean, default: false, null: false
       add :linear_webhook_id, :binary_id
-      add :github_webhook_id, :binary_id
+      add :github_webhook_id, :integer
       add :account_id, references(:accounts, on_delete: :nothing, type: :binary_id), null: false
 
       timestamps()

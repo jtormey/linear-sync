@@ -19,7 +19,7 @@ defmodule Linear.Data.IssueSync do
     field :state_id, :binary_id
     field :team_id, :binary_id
     field :linear_webhook_id, :binary_id
-    field :github_webhook_id, :binary_id
+    field :github_webhook_id, :integer
 
     belongs_to :account, Account
 

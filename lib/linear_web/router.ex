@@ -36,6 +36,7 @@ defmodule LinearWeb.Router do
     pipe_through :api
 
     post "/webhook/linear", LinearWebhookController, :handle
+    post "/webhook/github", GithubWebhookController, :handle
   end
 
   # Other scopes may use custom stacks.

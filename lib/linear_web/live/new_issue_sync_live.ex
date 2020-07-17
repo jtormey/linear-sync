@@ -76,9 +76,7 @@ defmodule LinearWeb.NewIssueSyncLive do
 
   def decode_kv(%{"id" => id, "name" => name}), do: [value: id, key: name]
 
-  def repo_to_option(%{"id" => id, "name" => name, "owner" => owner}) do
-    [value: to_string(id), key: "#{owner["login"]}/#{name}"]
-  end
+  def repo_to_option(%{"name" => name, "owner" => owner}), do: "#{owner["login"]}/#{name}"
 
   def put_source_name(attrs, socket) do
     case attrs do
@@ -91,11 +89,10 @@ defmodule LinearWeb.NewIssueSyncLive do
     end
   end
 
-  def put_dest_name(attrs, socket) do
+  def put_dest_name(attrs, _socket) do
     case attrs do
       %{"repo_id" => repo_id} ->
-        repo = Enum.find(socket.assigns.repos, &(&1[:value] == repo_id))
-        Map.put(attrs, "dest_name", repo[:key])
+        Map.put(attrs, "dest_name", repo_id)
 
       _otherwise ->
         attrs
