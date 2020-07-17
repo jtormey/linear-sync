@@ -32,6 +32,12 @@ defmodule LinearWeb.Router do
     live "/issue/:param", CreateIssueLive, :index
   end
 
+  scope "/", LinearWeb do
+    pipe_through :api
+
+    post "/webhook/linear", LinearWebhookController, :handle
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", LinearWeb do
   #   pipe_through :api

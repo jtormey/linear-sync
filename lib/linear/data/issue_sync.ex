@@ -18,6 +18,8 @@ defmodule Linear.Data.IssueSync do
     field :source_name, :string
     field :state_id, :binary_id
     field :team_id, :binary_id
+    field :linear_webhook_id, :binary_id
+    field :github_webhook_id, :binary_id
 
     belongs_to :account, Account
 
@@ -27,15 +29,15 @@ defmodule Linear.Data.IssueSync do
   @doc false
   def changeset(issue_sync, attrs) do
     issue_sync
-    |> cast(attrs, [:source_name, :dest_name, :enabled, :repo_id, :team_id, :state_id, :label_id, :project_id, :self_assign])
+    |> cast(attrs, [:source_name, :dest_name, :enabled, :repo_id, :team_id, :state_id, :label_id, :project_id, :self_assign, :linear_webhook_id, :github_webhook_id])
     |> validate_required([:source_name, :dest_name, :enabled, :repo_id, :team_id, :self_assign])
-    |> put_change(:external_id, generate_external_id())
   end
 
   @doc false
   def assoc_changeset(issue_sync, account = %Account{}, attrs) do
     issue_sync
     |> changeset(attrs)
+    |> put_change(:external_id, generate_external_id())
     |> put_assoc(:account, account)
   end
 

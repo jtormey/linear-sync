@@ -18,7 +18,7 @@ defmodule Linear.Data do
       [%IssueSync{}, ...]
 
   """
-  def list_issue_syncs (account = %Account{}) do
+  def list_issue_syncs(account = %Account{}) do
     Repo.all from i in IssueSync,
       where: [account_id: ^account.id],
       order_by: {:desc, :inserted_at}

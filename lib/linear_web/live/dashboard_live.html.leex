@@ -18,10 +18,24 @@
       <% else %>
         <ul>
           <%= for issue_sync <- @issue_syncs do %>
-            <li class="mb-2 px-6 py-4 text-white bg-dark-200 rounded-sm flex items-center">
-              <%= issue_sync.source_name %>
-              <span class="text-indigo-500 text-xl mx-4">⇄</span>
-              <%= issue_sync.dest_name %>
+            <li class="mb-2 px-6 py-4 text-white bg-dark-200 rounded-sm flex items-center justify-between">
+              <div class="">
+                <%= issue_sync.source_name %>
+                <span class="text-indigo-500 text-xl mx-4">⇄</span>
+                <%= issue_sync.dest_name %>
+              </div>
+
+              <div class="">
+                <%= if issue_sync.enabled do %>
+                  <button type="button" name="button" class="el-button-slim" phx-click="disable" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                    Disable
+                  </button>
+                <% else %>
+                  <button type="button" name="button" class="el-button-slim" phx-click="enable" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                    Enable
+                  </button>
+                <% end %>
+              </div>
             </li>
           <% end %>
         </ul>

@@ -91,6 +91,24 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.mutation(query)
   end
 
+  def create_webhook(session = %Session{}, opts) do
+    query = %Query{
+      operation: :webhookCreate,
+      variables: [input: Keyword.take(opts, [:url, :teamId])],
+      fields: [:success, webhook: [:id, :enabled]]
+    }
+    graphql session, GraphqlBuilder.mutation(query)
+  end
+
+  def delete_webhook(session = %Session{}, opts) do
+    query = %Query{
+      operation: :webhookDelete,
+      variables: Keyword.take(opts, [:id]),
+      fields: [:success]
+    }
+    graphql session, GraphqlBuilder.mutation(query)
+  end
+
   defp graphql(session = %Session{}, query) when is_binary(query) do
     headers = [
       {"Content-Type", "application/json"},
