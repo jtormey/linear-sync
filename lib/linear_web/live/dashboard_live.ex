@@ -3,6 +3,7 @@ defmodule LinearWeb.DashboardLive do
 
   alias Linear.Accounts
   alias Linear.Data
+  alias Linear.Data.IssueSync
   alias Linear.IssueSyncService
 
   @impl true
@@ -46,6 +47,20 @@ defmodule LinearWeb.DashboardLive do
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Failed to enabled issue sync (#{inspect reason})")}
+    end
+  end
+
+  @impl true
+  def handle_event("delete", %{"issue_sync_id" => id}, socket) do
+    %{account: account} = socket.assigns
+
+    case Data.get_issue_sync!(id) do
+      %IssueSync{enabled: false} = issue_sync ->
+        {:ok, _issue_sync} = Data.delete_issue_sync(issue_sync)
+        {:noreply, assign(socket, :issue_syncs, Data.list_issue_syncs(account))}
+
+      %IssueSync{enabled: true} ->
+        {:noreply, put_flash(socket, :error, "Cannot delete an active issue sync")}
     end
   end
 end

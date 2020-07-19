@@ -19,8 +19,7 @@ defmodule Linear.LinearAPI do
       variables: [id: team_id],
       fields: [
         labels: [nodes: [:id, :name, :archivedAt]],
-        states: [nodes: [:id, :name, :description, :archivedAt]],
-        projects: [nodes: [:id, :name, :color, :archivedAt, :completedAt]],
+        states: [nodes: [:id, :name, :description, :archivedAt]]
       ]
     }
     graphql session, GraphqlBuilder.query(query)
@@ -71,8 +70,8 @@ defmodule Linear.LinearAPI do
 
   def create_issue(session = %Session{}, opts) do
     query = """
-    mutation($teamId: String!, $title: String!, $description: String!) {
-      issueCreate(input: {teamId: $teamId, title: $title, description: $description}) {
+    mutation($teamId: String!, $title: String!, $description: String!, $stateId: String, $labelIds: [String!]) {
+      issueCreate(input: {teamId: $teamId, title: $title, description: $description, stateId: $stateId, labelIds: $labelIds}) {
         success,
         issue {
           id,
@@ -85,7 +84,7 @@ defmodule Linear.LinearAPI do
     }
     """
     graphql session, query,
-      variables: Keyword.take(opts, [:teamId, :title, :description])
+      variables: Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds])
   end
 
   def create_comment(session = %Session{}, opts) do
@@ -104,16 +103,23 @@ defmodule Linear.LinearAPI do
       variables: Keyword.take(opts, [:issueId, :body])
   end
 
-  def update_issue(session = %Session{}, issue_id, title, description) do
-    query = %Query{
-      operation: :issueUpdate,
-      variables: [id: issue_id, input: [title: title, description: description]],
-      fields: [
-        :success,
-        issue: [:id, :number, :title, :description, :url]
-      ]
+  def update_issue(session = %Session{}, opts) do
+    query = """
+    mutation($issueId: String!, $title: String, $description: String, $stateId: String, $labelIds: [String!]) {
+      issueUpdate(id: $issueId, input: {title: $title, description: $description, stateId: $stateId, labelIds: $labelIds}) {
+        success,
+        issue {
+          id,
+          number,
+          title,
+          description,
+          url
+        }
+      }
     }
-    graphql session, GraphqlBuilder.mutation(query)
+    """
+    graphql session, query,
+      variables: Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds])
   end
 
   def create_webhook(session = %Session{}, opts) do

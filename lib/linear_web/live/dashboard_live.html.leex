@@ -25,7 +25,7 @@
                 <%= issue_sync.dest_name %>
               </div>
 
-              <div class="">
+              <div class="flex items-center">
                 <%= if issue_sync.enabled do %>
                   <button type="button" name="button" class="el-button-slim" phx-click="disable" phx-value-issue_sync_id="<%= issue_sync.id %>">
                     Disable
@@ -34,6 +34,9 @@
                   <button type="button" name="button" class="el-button-slim" phx-click="enable" phx-value-issue_sync_id="<%= issue_sync.id %>">
                     Enable
                   </button>
+                  <a href="#" class="text-red-500 text-sm ml-4" phx-click="delete" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                    Delete
+                  </a>
                 <% end %>
               </div>
             </li>

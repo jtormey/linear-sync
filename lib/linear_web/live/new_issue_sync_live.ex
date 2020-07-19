@@ -25,7 +25,6 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:teams, Enum.map(teams, &decode_kv/1))
     |> assign(:labels, [])
     |> assign(:states, [])
-    |> assign(:projects, [])
     |> assign(:changeset, IssueSync.assoc_changeset(%IssueSync{}, account, %{}))
 
     {:ok, socket}
@@ -60,7 +59,6 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:team_id, nil)
     |> assign(:labels, [])
     |> assign(:states, [])
-    |> assign(:projects, [])
   end
 
   def load_team(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
@@ -72,7 +70,6 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:team_id, team_id)
     |> assign(:labels, Enum.map(result["labels"]["nodes"], &decode_kv/1))
     |> assign(:states, Enum.map(result["states"]["nodes"], &decode_kv/1))
-    |> assign(:projects, Enum.map(result["projects"]["nodes"], &decode_kv/1))
   end
 
   def decode_kv(%{"id" => id, "name" => name}), do: [value: id, key: name]

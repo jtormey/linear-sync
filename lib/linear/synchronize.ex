@@ -41,10 +41,25 @@ defmodule Linear.Synchronize do
         [#{issue_name}](#{issue["html_url"]}) by [@#{user["login"]}](#{user["html_url"]}) on GitHub
         """
 
-      result = LinearAPI.create_issue session,
+      opts = [
         teamId: issue_sync.team_id,
         title: title,
         description: description
+      ]
+
+      opts = if issue_sync.open_state_id != nil do
+        Keyword.put(opts, :stateId, issue_sync.open_state_id)
+      else
+        opts
+      end
+
+      opts = if issue_sync.label_id != nil do
+        Keyword.put(opts, :labelIds, [issue_sync.label_id])
+      else
+        opts
+      end
+
+      result = LinearAPI.create_issue session, opts
 
       case result do
         {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => attrs}}}} ->
@@ -82,6 +97,26 @@ defmodule Linear.Synchronize do
 
         error ->
           Logger.error("Error syncing Github comment to Linear, #{inspect error}")
+      end
+    end
+  end
+
+  def handle_incoming(:github, %{"action" => "closed", "issue" => issue}) do
+    Enum.each Data.list_ln_issues_by_github_issue_id(issue["id"]), fn ln_issue ->
+      if ln_issue.issue_sync.close_state_id != nil do
+        session = LinearAPI.Session.new(ln_issue.issue_sync.account)
+
+        result = LinearAPI.update_issue session,
+          issueId: ln_issue.id,
+          stateId: ln_issue.issue_sync.close_state_id
+
+        case result do
+          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
+            :ok
+
+          error ->
+            Logger.error("Error syncing status to Linear issue, #{inspect error}")
+        end
       end
     end
   end
