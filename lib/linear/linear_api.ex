@@ -11,7 +11,7 @@ defmodule Linear.LinearAPI do
 
   @base_url "https://api.linear.app"
 
-  def new_public_entry_data(session = %Session{}, team_id) do
+  def new_issue_sync_data(session = %Session{}, team_id) do
     query = %Query{
       operation: :team,
       variables: [id: team_id],

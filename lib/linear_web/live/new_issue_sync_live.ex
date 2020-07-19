@@ -65,7 +65,7 @@ defmodule LinearWeb.NewIssueSyncLive do
   def load_team(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
 
   def load_team(socket, team_id) do
-    {:ok, %{"data" => %{"team" => result}}} = LinearAPI.new_public_entry_data(socket.assigns.session, team_id)
+    {:ok, %{"data" => %{"team" => result}}} = LinearAPI.new_issue_sync_data(socket.assigns.session, team_id)
 
     socket
     |> assign(:team_id, team_id)

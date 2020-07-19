@@ -8,6 +8,7 @@ defmodule Linear.Data do
 
   alias Linear.Accounts.Account
   alias Linear.Data.IssueSync
+  alias Linear.Data.LnIssue
 
   @doc """
   Returns the list of issue_syncs for an account.
@@ -103,5 +104,11 @@ defmodule Linear.Data do
   """
   def change_issue_sync(%IssueSync{} = issue_sync, attrs \\ %{}) do
     IssueSync.changeset(issue_sync, attrs)
+  end
+
+  def create_ln_issue(issue_sync = %IssueSync{}, attrs \\ %{}) do
+    %LnIssue{}
+    |> LnIssue.assoc_changeset(issue_sync, attrs)
+    |> Repo.insert()
   end
 end
