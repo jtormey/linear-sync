@@ -42,10 +42,10 @@ defmodule Linear.Data do
   """
   def get_issue_sync!(id), do: Repo.get!(IssueSync, id)
 
-  def list_enabled_issue_syncs(repo_id) when is_binary(repo_id) do
+  def list_issue_syncs_by_repo_id(repo_id) do
     Repo.all from i in IssueSync,
       join: a in assoc(i, :account),
-      where: [repo_id: ^repo_id, enabled: true],
+      where: i.repo_id == ^repo_id and i.enabled == true,
       preload: [account: a]
   end
 
@@ -118,7 +118,7 @@ defmodule Linear.Data do
     Repo.all from l in LnIssue,
       join: i in assoc(l, :issue_sync),
       join: a in assoc(i, :account),
-      where: [github_issue_id: ^github_issue_id],
+      where: l.github_issue_id == ^github_issue_id and i.enabled == true,
       preload: [issue_sync: {i, account: a}]
   end
 

@@ -62,9 +62,9 @@ defmodule Linear.IssueSyncService do
 
   def enable_github_webhook(account, repo, multi) do
     client = GithubAPI.client(account)
-    repo_id = GithubAPI.parse_repo_id!(multi.issue_sync.repo_id)
+    repo_key = GithubAPI.to_repo_key!(multi.issue_sync)
 
-    result = GithubAPI.create_webhook client, repo_id,
+    result = GithubAPI.create_webhook client, repo_key,
       url: Routes.github_webhook_url(LinearWeb.Endpoint, :handle),
       secret: "secret"
 
@@ -82,9 +82,9 @@ defmodule Linear.IssueSyncService do
 
   def disable_github_webhook(account, repo, multi) do
     client = GithubAPI.client(account)
-    repo_id = GithubAPI.parse_repo_id!(multi.issue_sync.repo_id)
+    repo_key = GithubAPI.to_repo_key!(multi.issue_sync)
 
-    result = GithubAPI.delete_webhook client, repo_id,
+    result = GithubAPI.delete_webhook client, repo_key,
       hook_id: multi.issue_sync.github_webhook_id
 
     do_disable = fn ->

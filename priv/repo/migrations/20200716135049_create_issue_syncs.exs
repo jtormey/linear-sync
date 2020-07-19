@@ -7,7 +7,9 @@ defmodule Linear.Repo.Migrations.CreateIssueSyncs do
       add :source_name, :string, null: false
       add :dest_name, :string, null: false
       add :enabled, :boolean, default: false, null: false
-      add :repo_id, :string, null: false
+      add :repo_id, :integer, null: false
+      add :repo_owner, :string, null: false
+      add :repo_name, :string, null: false
       add :team_id, :binary_id, null: false
       add :state_id, :binary_id
       add :label_id, :binary_id
@@ -20,7 +22,9 @@ defmodule Linear.Repo.Migrations.CreateIssueSyncs do
       timestamps()
     end
 
-    create unique_index(:issue_syncs, [:external_id])
     create index(:issue_syncs, [:account_id])
+    create index(:issue_syncs, [:repo_id])
+    create unique_index(:issue_syncs, [:external_id])
+    create unique_index(:issue_syncs, [:team_id, :repo_id])
   end
 end

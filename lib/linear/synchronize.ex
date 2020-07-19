@@ -22,23 +22,23 @@ defmodule Linear.Synchronize do
   def handle_incoming(:github, %{"action" => "opened", "issue" => issue, "repository" => repo}) do
     %{"id" => _id, "title" => title, "body" => body, "number" => number, "user" => user} = issue
 
-    repo_id = "#{repo["owner"]["login"]}/#{repo["name"]}"
-
-    Enum.each Data.list_enabled_issue_syncs(repo_id), fn issue_sync ->
+    Enum.each Data.list_issue_syncs_by_repo_id(repo["id"]), fn issue_sync ->
       session = LinearAPI.Session.new(issue_sync.account)
+
+      issue_name = "#{issue_sync.repo_owner}/#{issue_sync.repo_name} ##{number}"
 
       title =
         """
-        "#{title}" (#{repo_id} ##{number})
+        "#{title}" (#{issue_name})
         """
 
       description =
         """
         #{body}
 
-        ___
+        #{unless body == "", do: "___"}
 
-        [#{repo_id} ##{number}](#{issue["html_url"]}) by [@#{user["login"]}](#{user["html_url"]}) on GitHub
+        [#{issue_name}](#{issue["html_url"]}) by [@#{user["login"]}](#{user["html_url"]}) on GitHub
         """
 
       result = LinearAPI.create_issue session,

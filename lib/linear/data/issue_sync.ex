@@ -14,7 +14,9 @@ defmodule Linear.Data.IssueSync do
     field :external_id, :string
     field :label_id, :binary_id
     field :project_id, :binary_id
-    field :repo_id, :string
+    field :repo_id, :integer
+    field :repo_owner, :string
+    field :repo_name, :string
     field :self_assign, :boolean, default: false
     field :source_name, :string
     field :state_id, :binary_id
@@ -31,8 +33,9 @@ defmodule Linear.Data.IssueSync do
   @doc false
   def changeset(issue_sync, attrs) do
     issue_sync
-    |> cast(attrs, [:source_name, :dest_name, :enabled, :repo_id, :team_id, :state_id, :label_id, :project_id, :self_assign, :linear_webhook_id, :github_webhook_id])
-    |> validate_required([:source_name, :dest_name, :enabled, :repo_id, :team_id, :self_assign])
+    |> cast(attrs, [:source_name, :dest_name, :enabled, :repo_id, :repo_owner, :repo_name, :team_id, :state_id, :label_id, :project_id, :self_assign, :linear_webhook_id, :github_webhook_id])
+    |> validate_required([:source_name, :dest_name, :enabled, :repo_id, :repo_owner, :repo_name, :team_id, :self_assign])
+    |> unique_constraint(:repo_id, name: :issue_syncs_team_id_repo_id_index, message: "there is already an issue sync for this team repo combination")
   end
 
   @doc false
