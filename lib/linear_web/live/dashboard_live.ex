@@ -11,6 +11,7 @@ defmodule LinearWeb.DashboardLive do
     issue_syncs = Data.list_issue_syncs(account)
 
     socket = socket
+    |> assign(:page_title, "Account")
     |> assign(:account, account)
     |> assign(:issue_syncs, issue_syncs)
 

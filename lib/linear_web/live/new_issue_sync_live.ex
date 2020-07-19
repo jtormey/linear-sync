@@ -16,6 +16,7 @@ defmodule LinearWeb.NewIssueSyncLive do
     {200, repos, _response} = Tentacat.Repositories.list_mine(client)
 
     socket = socket
+    |> assign(:page_title, "New Issue Sync")
     |> assign(:account, account)
     |> assign(:session, session)
     |> assign(:client, client)

@@ -4,10 +4,13 @@ defmodule LinearWeb.SessionController do
   alias Linear.Accounts
   alias Linear.Accounts.Account
 
+  @page_title "Login"
+
   def index(conn, _params) do
     case get_session(conn, :account_id) do
       nil ->
         conn
+        |> assign(:page_title, @page_title)
         |> assign(:changeset, Accounts.change_account(%Account{}))
         |> render("index.html")
 
@@ -27,7 +30,7 @@ defmodule LinearWeb.SessionController do
             handle_account(conn, account)
 
           {:error, %Ecto.Changeset{} = changeset} ->
-            render(conn, "index.html", changeset: changeset)
+            render(conn, "index.html", changeset: changeset, page_title: @page_title)
         end
     end
   end

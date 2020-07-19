@@ -9,7 +9,7 @@ defmodule LinearWeb.LinkGithubLive do
     case Accounts.get_account!(account_id) do
       %Account{github_token: nil} = account ->
         Accounts.subscribe(account)
-        {:ok, assign(socket, :linking?, false)}
+        {:ok, assign(socket, page_title: "Link GitHub", linking?: false)}
 
       %Account{} ->
         {:ok, redirect(socket, to: Routes.dashboard_path(socket, :index))}
