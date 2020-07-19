@@ -5,6 +5,8 @@ defmodule Linear.LinearAPI do
 
   use HTTPoison.Base
 
+  require Logger
+
   alias HTTPoison.Response
   alias GraphqlBuilder.Query
   alias __MODULE__.Session
@@ -67,16 +69,39 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
-  def create_issue(session = %Session{}, team_id, title, description) do
-    query = %Query{
-      operation: :issueCreate,
-      variables: [input: [teamId: team_id, title: title, description: description]],
-      fields: [
-        :success,
-        issue: [:id, :number, :title, :description, :url]
-      ]
+  def create_issue(session = %Session{}, opts) do
+    query = """
+    mutation($teamId: String!, $title: String!, $description: String!) {
+      issueCreate(input: {teamId: $teamId, title: $title, description: $description}) {
+        success,
+        issue {
+          id,
+          number,
+          title,
+          description,
+          url
+        }
+      }
     }
-    graphql session, GraphqlBuilder.mutation(query)
+    """
+    graphql session, query,
+      variables: Keyword.take(opts, [:teamId, :title, :description])
+  end
+
+  def create_comment(session = %Session{}, opts) do
+    query = """
+    mutation($issueId: String!, $body: String!) {
+      commentCreate(input: {issueId: $issueId, body: $body}) {
+        success,
+        comment {
+          id,
+          body
+        }
+      }
+    }
+    """
+    graphql session, query,
+      variables: Keyword.take(opts, [:issueId, :body])
   end
 
   def update_issue(session = %Session{}, issue_id, title, description) do
@@ -109,13 +134,18 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.mutation(query)
   end
 
-  defp graphql(session = %Session{}, query) when is_binary(query) do
+  defp graphql(session = %Session{}, query, opts \\ []) when is_binary(query) do
+    variables = Keyword.get(opts, :variables, []) |> Map.new()
+
+    Logger.debug("Running graphql query #{query} with variables #{inspect variables}")
+
     headers = [
       {"Content-Type", "application/json"},
       {"Authorization", session.api_key}
     ]
+
     "/graphql"
-    |> post(Jason.encode!(%{query: query}), headers)
+    |> post(Jason.encode!(%{query: query, variables: variables}), headers)
     |> handle_response()
   end
 

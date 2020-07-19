@@ -3,6 +3,7 @@ defmodule Linear.Data.IssueSync do
   import Ecto.Changeset
 
   alias Linear.Accounts.Account
+  alias Linear.Data.LnIssue
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -22,6 +23,7 @@ defmodule Linear.Data.IssueSync do
     field :github_webhook_id, :integer
 
     belongs_to :account, Account
+    has_many :ln_issues, LnIssue
 
     timestamps(type: :utc_datetime)
   end
