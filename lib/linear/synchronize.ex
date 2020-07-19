@@ -59,6 +59,12 @@ defmodule Linear.Synchronize do
         opts
       end
 
+      opts = if issue_sync.assignee_id != nil do
+        Keyword.put(opts, :assigneeId, issue_sync.assignee_id)
+      else
+        opts
+      end
+
       result = LinearAPI.create_issue session, opts
 
       case result do

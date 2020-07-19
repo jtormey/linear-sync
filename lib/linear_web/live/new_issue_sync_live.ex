@@ -33,6 +33,7 @@ defmodule LinearWeb.NewIssueSyncLive do
   @impl true
   def handle_event("validate", %{"issue_sync" => attrs}, socket) do
     attrs = attrs
+    |> put_assignee(socket)
     |> put_source_name(socket)
     |> put_dest_name(socket)
 
@@ -76,6 +77,17 @@ defmodule LinearWeb.NewIssueSyncLive do
 
   def repo_to_option(%{"id" => id, "name" => name, "owner" => owner}) do
     [value: id, key: "#{owner["login"]}/#{name}", owner: owner["login"], name: name]
+  end
+
+  def put_assignee(attrs, socket) do
+    IO.inspect attrs
+    case attrs do
+      %{"self_assign" => "true"} ->
+        Map.put(attrs, "assignee_id", socket.assigns.viewer["id"])
+
+      _otherwise ->
+        attrs
+    end
   end
 
   def put_source_name(attrs, socket) do

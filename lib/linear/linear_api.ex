@@ -70,8 +70,8 @@ defmodule Linear.LinearAPI do
 
   def create_issue(session = %Session{}, opts) do
     query = """
-    mutation($teamId: String!, $title: String!, $description: String!, $stateId: String, $labelIds: [String!]) {
-      issueCreate(input: {teamId: $teamId, title: $title, description: $description, stateId: $stateId, labelIds: $labelIds}) {
+    mutation($teamId: String!, $title: String!, $description: String!, $stateId: String, $labelIds: [String!], $assigneeId: String) {
+      issueCreate(input: {teamId: $teamId, title: $title, description: $description, stateId: $stateId, labelIds: $labelIds, assigneeId: $assigneeId}) {
         success,
         issue {
           id,
@@ -84,7 +84,7 @@ defmodule Linear.LinearAPI do
     }
     """
     graphql session, query,
-      variables: Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds])
+      variables: Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds, :assigneeId])
   end
 
   def create_comment(session = %Session{}, opts) do
@@ -105,8 +105,8 @@ defmodule Linear.LinearAPI do
 
   def update_issue(session = %Session{}, opts) do
     query = """
-    mutation($issueId: String!, $title: String, $description: String, $stateId: String, $labelIds: [String!]) {
-      issueUpdate(id: $issueId, input: {title: $title, description: $description, stateId: $stateId, labelIds: $labelIds}) {
+    mutation($issueId: String!, $title: String, $description: String, $stateId: String, $labelIds: [String!], $assigneeId: String) {
+      issueUpdate(id: $issueId, input: {title: $title, description: $description, stateId: $stateId, labelIds: $labelIds, assigneeId: $assigneeId}) {
         success,
         issue {
           id,
@@ -119,7 +119,7 @@ defmodule Linear.LinearAPI do
     }
     """
     graphql session, query,
-      variables: Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds])
+      variables: Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds, :assigneeId])
   end
 
   def create_webhook(session = %Session{}, opts) do
