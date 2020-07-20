@@ -2,7 +2,7 @@ defmodule LinearWeb.LinearWebhookController do
   use LinearWeb, :controller
 
   def handle(conn, params) do
-    IO.inspect params
+    Linear.Synchronize.handle_incoming(:linear, params)
     json(conn, %{"success" => true})
   end
 end

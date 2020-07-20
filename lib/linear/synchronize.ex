@@ -128,6 +128,6 @@ defmodule Linear.Synchronize do
   end
 
   def handle_incoming(scope, params) do
-    IO.inspect "Unhandled in scope #{scope}, #{inspect params}"
+    Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
   end
 end
