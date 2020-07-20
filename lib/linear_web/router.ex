@@ -28,6 +28,7 @@ defmodule LinearWeb.Router do
 
     live "/account", DashboardLive, :index
     live "/account/issue-sync/new", NewIssueSyncLive, :index
+    live "/account/issue-sync/:id/edit", EditIssueSyncLive, :index
   end
 
   scope "/", LinearWeb do

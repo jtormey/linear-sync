@@ -51,26 +51,4 @@ defmodule Linear.Data.IssueSync do
     |> String.split("-")
     |> List.last()
   end
-
-  def to_param(issue_sync = %__MODULE__{}) do
-    issue_sync.name
-    |> String.downcase()
-    |> String.split(" ")
-    |> Enum.join("-")
-    |> Kernel.<>("-")
-    |> Kernel.<>(issue_sync.external_id)
-  end
-
-  def from_param(param) when is_binary(param) do
-    param
-    |> String.split("-")
-    |> List.last()
-  end
-end
-
-defimpl Phoenix.Param, for: Linear.Data.IssueSync do
-  @impl true
-  def to_param(issue_sync) do
-    Linear.Data.IssueSync.to_param(issue_sync)
-  end
 end

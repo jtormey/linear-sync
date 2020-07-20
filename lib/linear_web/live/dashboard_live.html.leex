@@ -30,6 +30,7 @@
                   <button type="button" name="button" class="el-button-slim" phx-click="disable" phx-value-issue_sync_id="<%= issue_sync.id %>">
                     Disable
                   </button>
+                  <%= live_redirect "Edit", to: Routes.edit_issue_sync_path(@socket, :index, issue_sync), class: "text-dark-500 text-sm ml-4" %>
                 <% else %>
                   <button type="button" name="button" class="el-button-slim" phx-click="enable" phx-value-issue_sync_id="<%= issue_sync.id %>">
                     Enable
