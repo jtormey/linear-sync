@@ -16,8 +16,10 @@ defmodule Linear.Synchronize do
 
   require Logger
 
+  alias Linear.Accounts
   alias Linear.Data
   alias Linear.LinearAPI
+  alias Linear.GithubAPI
 
   def handle_incoming(:github, %{"action" => "opened", "issue" => issue, "repository" => repo}) do
     %{"id" => _id, "title" => title, "body" => body, "number" => number, "user" => user} = issue
@@ -70,6 +72,20 @@ defmodule Linear.Synchronize do
       case result do
         {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => attrs}}}} ->
           {:ok, ln_issue} = Data.create_ln_issue(issue_sync, Map.put(attrs, "github_issue_id", issue["id"]))
+
+          if issue_sync.close_on_open do
+            comment =
+              """
+              Automatically moved to [Linear (##{ln_issue.number})](#{ln_issue.url})
+              """
+
+            client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+            repo_key = GithubAPI.to_repo_key!(issue_sync)
+
+            GithubAPI.create_issue_comment(client, repo_key, number, comment)
+            GithubAPI.close_issue(client, repo_key, number)
+          end
+
           {:ok, ln_issue}
 
         error ->
@@ -109,7 +125,7 @@ defmodule Linear.Synchronize do
 
   def handle_incoming(:github, %{"action" => "closed", "issue" => issue}) do
     Enum.each Data.list_ln_issues_by_github_issue_id(issue["id"]), fn ln_issue ->
-      if ln_issue.issue_sync.close_state_id != nil do
+      if ln_issue.issue_sync.close_state_id != nil and not ln_issue.issue_sync.close_on_open do
         session = LinearAPI.Session.new(ln_issue.issue_sync.account)
 
         result = LinearAPI.update_issue session,

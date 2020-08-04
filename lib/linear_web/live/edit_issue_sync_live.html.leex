@@ -68,11 +68,20 @@
 
       <div class="border-b border-dark-300 mx-4 mb-6"></div>
 
-      <div class="flex items-center">
+      <div class="flex items-center mb-3">
         <%= label f, :assignee_id, class: "px-4" do %>
           <%= checkbox f, :assignee_id, checked_value: @viewer["id"], unchecked_value: nil %>
           <span class="text-dark-600 text-sm ml-2">
             Self-assign new issues (<%= @viewer["name"] %>)
+          </span>
+        <% end %>
+      </div>
+
+      <div class="flex items-center">
+        <%= label f, :close_on_open, class: "px-4" do %>
+          <%= checkbox f, :close_on_open %>
+          <span class="text-dark-600 text-sm ml-2">
+            Automatically close GitHub issues with a link to the newly created Linear issue
           </span>
         <% end %>
       </div>

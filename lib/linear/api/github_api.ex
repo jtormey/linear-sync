@@ -18,6 +18,14 @@ defmodule Linear.GithubAPI do
     result
   end
 
+  def close_issue(client = %Client{}, {owner, repo}, issue_number) do
+    Tentacat.Issues.update(client, owner, repo, issue_number, %{"state" => "closed"})
+  end
+
+  def create_issue_comment(client = %Client{}, {owner, repo}, issue_number, body) do
+    Tentacat.Issues.Comments.create(client, owner, repo, issue_number, %{"body" => body})
+  end
+
   def create_webhook(client = %Client{}, {owner, repo}, opts) do
     Tentacat.Hooks.create(client, owner, repo, %{
       "name" => "web",
