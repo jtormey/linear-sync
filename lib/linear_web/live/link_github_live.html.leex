@@ -7,7 +7,8 @@
 
     <p class="text-dark-500 text-sm mb-8">
       LinearSync needs to connect to your GitHub account in order to sync issues
-      between Linear and GitHub. You will have full control over this process.
+      between Linear and GitHub. You will have full control over this process. Or,
+      <%= link "go back", to: Routes.session_path(@socket, :delete), method: :delete, class: "underline" %>.
     </p>
 
     <%= if @linking? do %>
