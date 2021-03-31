@@ -1,13 +1,31 @@
 # Linear
 
-To start your Phoenix server:
+## Development
 
+Environment requirements:
+
+  * [Elixir](https://elixir-lang.org/)
+  * [Postgres](https://www.postgresql.org/)
+  * [ngrok](https://ngrok.com/)
+
+Setting up the application:
+
+  * Start an ngrok session: `ngrok http 4000`
+  * Copy `config/dev.secret.template.exs` to `config/dev.secret.exs`
+  * Configure `ngrok_host` in `config/dev.secret.exs`
+  * Configure `Linear.Repo` in `config/dev.secret.exs`
+  * Configure `Linear.Auth.Github` in `config/dev.secret.exs` (see: [Creating a GitHub App](https://docs.github.com/en/developers/apps/creating-a-github-app))
   * Setup the project with `mix setup`
-  * Start Phoenix endpoint with `mix phx.server`
+  * Start Phoenix endpoint with `iex -S mix phx.server`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Now you can visit the URL provided by `ngrok` from your browser to access the application.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+### Why use ngrok?
+
+Webhook requests from GitHub or Linear cannot target `localhost`, so while
+in development we use `ngrok` to expose the application to the internet. Phoenix
+uses this URL when configuring webhooks, therefore allowing the application to
+receive webhook requests while still running locally.
 
 ## Learn more
 
