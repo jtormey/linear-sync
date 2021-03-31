@@ -15,7 +15,7 @@ defmodule LinearWeb.EditIssueSyncLive do
     account = Accounts.get_account!(account_id)
 
     if issue_sync.account_id != account.id do
-      {:noreply, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+      {:ok, redirect(socket, to: Routes.dashboard_path(socket, :index))}
     else
       session = LinearAPI.Session.new(account.api_key)
 
