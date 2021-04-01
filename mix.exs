@@ -47,7 +47,7 @@ defmodule Linear.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:httpoison, "~> 1.7"},
+      {:httpoison, "~> 1.8"},
       {:graphql_builder, "~> 0.1"},
       {:oauth2, "~> 2.0"},
       {:tentacat, "~> 2.0"}
