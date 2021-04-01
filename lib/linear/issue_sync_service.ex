@@ -27,8 +27,6 @@ defmodule Linear.IssueSyncService do
     |> handle_result()
   end
 
-  def decode_kv(%{"id" => id, "name" => name}), do: [value: id, key: name]
-
   def enable_linear_webhook(account, repo, multi) do
     result = LinearAPI.create_webhook LinearAPI.Session.new(account),
       url: Routes.linear_webhook_url(LinearWeb.Endpoint, :handle),
