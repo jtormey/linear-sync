@@ -48,7 +48,7 @@ defmodule Linear.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:httpoison, "~> 1.8"},
-      {:graphql_builder, "~> 0.1"},
+      {:graphql_builder, "~> 0.2"},
       {:oauth2, "~> 2.0"},
       {:tentacat, "~> 2.0"}
     ]

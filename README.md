@@ -25,8 +25,8 @@ Setting up the application:
   * Configure `ngrok_host` in `config/dev.secret.exs`
   * Configure `Linear.Repo` in `config/dev.secret.exs`
   * Configure `Linear.Auth.Github` in `config/dev.secret.exs` (see: [Creating a GitHub App](https://docs.github.com/en/developers/apps/creating-a-github-app)) with `repo` scope
-  * Setup the project with `mix setup`
-  * Start Phoenix endpoint with `iex -S mix phx.server`
+  * Setup the project with `make install`
+  * Start Phoenix endpoint with `make run`
 
 Now you can visit the URL provided by `ngrok` from your browser to access the application.
 
