@@ -1,4 +1,6 @@
-# Linear
+# Linear-sync
+
+Syncs GitHub issues and comments with linear.app
 
 ## Development
 
@@ -8,13 +10,21 @@ Environment requirements:
   * [Postgres](https://www.postgresql.org/)
   * [ngrok](https://ngrok.com/)
 
+---
+
+Start local postgres service
+
+```
+$ docker-compose up
+```
+
 Setting up the application:
 
   * Start an ngrok session: `ngrok http 4000`
   * Copy `config/dev.secret.template.exs` to `config/dev.secret.exs`
   * Configure `ngrok_host` in `config/dev.secret.exs`
   * Configure `Linear.Repo` in `config/dev.secret.exs`
-  * Configure `Linear.Auth.Github` in `config/dev.secret.exs` (see: [Creating a GitHub App](https://docs.github.com/en/developers/apps/creating-a-github-app))
+  * Configure `Linear.Auth.Github` in `config/dev.secret.exs` (see: [Creating a GitHub App](https://docs.github.com/en/developers/apps/creating-a-github-app)) with `repo` scope
   * Setup the project with `mix setup`
   * Start Phoenix endpoint with `iex -S mix phx.server`
 
