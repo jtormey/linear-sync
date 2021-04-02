@@ -130,7 +130,6 @@ defmodule Linear.LinearAPI do
       variables: [input: Keyword.take(opts, [:url, :teamId, :resourceTypes])],
       fields: [:success, webhook: [:id, :enabled]]
     }
-    # Logger.debug("Webhook query: #{opts}")
     graphql session, GraphqlBuilder.mutation(query)
   end
 
