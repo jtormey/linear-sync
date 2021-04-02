@@ -10,6 +10,8 @@ defmodule LinearWeb.Endpoint do
     signing_salt: "FdJju97z"
   ]
 
+  @session_max_age 365 * 86400
+
   socket "/socket", LinearWeb.UserSocket,
     websocket: true,
     longpoll: false
@@ -49,6 +51,6 @@ defmodule LinearWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
+  plug Plug.Session, Keyword.put(@session_options, :max_age, @session_max_age)
   plug LinearWeb.Router
 end
