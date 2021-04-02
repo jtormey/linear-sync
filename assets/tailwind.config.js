@@ -1,4 +1,13 @@
 module.exports = {
+  purge: {
+    enabled: process.env.MIX_ENV === 'prod',
+    content: [
+      '../lib/**/*.ex',
+      '../lib/**/*.eex',
+      '../lib/**/*.leex',
+      '../lib/**/*_view*.ex'
+    ]
+  },
   theme: {
     extend: {
       colors: {

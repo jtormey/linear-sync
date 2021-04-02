@@ -1,5 +1,7 @@
 use Mix.Config
 
+System.put_env("NODE_ENV", "development")
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
