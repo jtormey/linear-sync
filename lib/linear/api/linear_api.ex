@@ -123,12 +123,35 @@ defmodule Linear.LinearAPI do
   end
 
   def create_webhook(session = %Session{}, opts) do
+    resourceTypes = [resourceTypes: ["Comment","Issue"]]
+    opts = Keyword.merge(opts, resourceTypes)
     query = %Query{
       operation: :webhookCreate,
-      variables: [input: Keyword.take(opts, [:url, :teamId])],
+      variables: [input: Keyword.take(opts, [:url, :teamId, :resourceTypes])],
       fields: [:success, webhook: [:id, :enabled]]
     }
     graphql session, GraphqlBuilder.mutation(query)
+  end
+
+  def get_webhooks(session = %Session{}) do
+    graphql session, """
+      query {
+        teams {
+          nodes {
+            webhooks {
+              nodes {
+                id
+                url
+                enabled
+                creator {
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
+      """
   end
 
   def delete_webhook(session = %Session{}, opts) do
