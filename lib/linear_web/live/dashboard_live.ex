@@ -21,7 +21,7 @@ defmodule LinearWeb.DashboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, redirect(socket, to: Routes.session_path(socket, :index))}
+    {:ok, push_redirect(socket, to: Routes.session_path(socket, :index))}
   end
 
   @impl true

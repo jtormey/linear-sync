@@ -12,13 +12,13 @@ defmodule LinearWeb.LinkGithubLive do
         {:ok, assign(socket, page_title: "Link GitHub", linking?: false)}
 
       %Account{} ->
-        {:ok, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+        {:ok, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
     end
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, redirect(socket, to: Routes.session_path(socket, :index))}
+    {:ok, push_redirect(socket, to: Routes.session_path(socket, :index))}
   end
 
   @impl true
@@ -29,7 +29,7 @@ defmodule LinearWeb.LinkGithubLive do
   @impl true
   def handle_info({:github_link, account = %Account{}}, socket) do
     if account.github_token != nil do
-      {:noreply, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+      {:noreply, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
     else
       {:noreply, socket}
     end

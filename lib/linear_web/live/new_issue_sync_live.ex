@@ -47,7 +47,7 @@ defmodule LinearWeb.NewIssueSyncLive do
   def handle_event("submit", _params, socket) do
     case Repo.insert(socket.assigns.changeset) do
       {:ok, _issue_sync} ->
-        {:noreply, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+        {:noreply, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}

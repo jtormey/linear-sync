@@ -15,7 +15,7 @@ defmodule LinearWeb.EditIssueSyncLive do
     account = Accounts.get_account!(account_id)
 
     if issue_sync.account_id != account.id do
-      {:ok, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+      {:ok, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
     else
       session = LinearAPI.Session.new(account.api_key)
 
@@ -44,7 +44,7 @@ defmodule LinearWeb.EditIssueSyncLive do
   def handle_event("submit", _params, socket) do
     case Repo.update(socket.assigns.changeset) do
       {:ok, _issue_sync} ->
-        {:noreply, redirect(socket, to: Routes.dashboard_path(socket, :index))}
+        {:noreply, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}
