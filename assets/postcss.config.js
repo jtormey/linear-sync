@@ -1,6 +1,8 @@
 module.exports = {
   plugins: [
-    require(process.env.MIX_ENV === 'prod' ? 'tailwindcss' : '@tailwindcss/jit'),
+    require('postcss-import'),
+    require('postcss-nested'),
+    require('tailwindcss'),
     require('autoprefixer')
   ]
 }
