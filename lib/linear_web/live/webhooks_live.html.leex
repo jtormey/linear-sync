@@ -5,6 +5,10 @@
 <div class="w-full sm:w-1/2 mx-auto mt-16">
   <div class="pb-8 mb-8 border-b border-dark-200">
     <h1 class="text-dark-600 text-2xl">Webhooks</h1>
+    <p class="text-dark-500 text-sm italic mt-2">
+      Note: you may not see all webhooks listed here if you have an older
+      account. To fix this, please manually disable and re-enable your issue syncs :)
+    </p>
   </div>
 
   <div class="mb-4">
@@ -20,8 +24,11 @@
       <ul>
         <%= for linear_webhook <- @webhooks.linear do %>
           <li class="mb-2 px-6 py-4 text-sm text-white bg-dark-200 rounded-sm">
-            <div class="pb-4 mb-4 border-b border-dark-500 flex items-center justify-between">
-              ID: "<%= linear_webhook.webhook_id %>"
+            <div class="pb-4 mb-4 border-b border-dark-500 flex justify-between">
+              <div>
+                <p>ID: "<%= linear_webhook.webhook_id %>"</p>
+                <p>Team: "<%= linear_webhook.team_id %>"</p>
+              </div>
               <div>
                 <div class="el-button-slim w-auto flex items-center">
                   <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
@@ -57,8 +64,11 @@
       <ul>
         <%= for github_webhook <- @webhooks.github do %>
           <li class="mb-2 px-6 py-4 text-sm text-white bg-dark-200 rounded-sm">
-            <div class="pb-4 mb-4 border-b border-dark-500 flex items-center justify-between">
-              ID: <%= github_webhook.webhook_id %>
+            <div class="pb-4 mb-4 border-b border-dark-500 flex justify-between">
+              <div>
+                <p>ID: <%= github_webhook.webhook_id %></p>
+                <p>Repo: <%= github_webhook.repo_owner %>/<%= github_webhook.repo_name %></p>
+              </div>
               <div>
                 <div class="el-button-slim w-auto flex items-center">
                   <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
