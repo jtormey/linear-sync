@@ -6,6 +6,7 @@
         <h1 class="text-white text-2xl ml-4 mb-1">LinearSync</h1>
       </span>
       <div class="">
+        <%= live_redirect "View webhooks", to: Routes.webhooks_path(@socket, :index), class: "el-button-slim" %>
         <%= live_redirect "Create issue sync", to: Routes.new_issue_sync_path(@socket, :index), class: "el-button-slim" %>
       </div>
     </div>

@@ -32,17 +32,17 @@ defmodule Linear.Webhooks do
   Lists all webhooks associated with an account, separated by scope.
   """
   def list_webhooks(%Account{} = account) do
+    query_webhooks = fn query ->
+      query
+      |> where(account_id: ^account.id)
+      |> order_by(desc: :inserted_at)
+      |> preload(:issue_syncs)
+      |> Repo.all()
+    end
+
     %{
-      linear: Repo.all(
-        from linear_webhook in LinearWebhook,
-          where: [account_id: ^account.id],
-          order_by: {:desc, :inserted_at}
-      ),
-      github: Repo.all(
-        from github_webhook in GithubWebhook,
-          where: [account_id: ^account.id],
-          order_by: {:desc, :inserted_at}
-      )
+      linear: query_webhooks.(from LinearWebhook),
+      github: query_webhooks.(from GithubWebhook)
     }
   end
 

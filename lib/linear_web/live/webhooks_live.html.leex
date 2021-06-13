@@ -1,0 +1,84 @@
+<div class="text-dark-600 my-4">
+  <%= live_redirect "← Back to account", to: Routes.dashboard_path(@socket, :index) %>
+</div>
+
+<div class="w-full sm:w-1/2 mx-auto mt-16">
+  <div class="pb-8 mb-8 border-b border-dark-200">
+    <h1 class="text-dark-600 text-2xl">Webhooks</h1>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="text-dark-600 text-xl">Linear</h2>
+  </div>
+
+  <div class="pb-8 mb-8 border-b border-dark-200">
+    <%= if Enum.empty?(@webhooks.linear) do %>
+      <p class="text-dark-500 text-sm">
+        No Linear webhooks found.
+      </p>
+    <% else %>
+      <ul>
+        <%= for linear_webhook <- @webhooks.linear do %>
+          <li class="mb-2 px-6 py-4 text-sm text-white bg-dark-200 rounded-sm">
+            <div class="pb-4 mb-4 border-b border-dark-500 flex items-center justify-between">
+              ID: "<%= linear_webhook.webhook_id %>"
+              <div>
+                <div class="el-button-slim w-auto flex items-center">
+                  <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
+                  <%= length linear_webhook.issue_syncs %> active syncs
+                </div>
+              </div>
+            </div>
+            <ul>
+              <%= for issue_sync <- linear_webhook.issue_syncs do %>
+                <li>
+                  <%= issue_sync.source_name %>
+                  <span class="text-indigo-500 text-xl mx-4">⇄</span>
+                  <%= issue_sync.dest_name %>
+                </li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="text-dark-600 text-xl">Github</h2>
+  </div>
+
+  <div class="pb-8 mb-4 border-b border-dark-200">
+    <%= if Enum.empty?(@webhooks.github) do %>
+      <p class="text-dark-500 text-sm">
+        No Github webhooks found.
+      </p>
+    <% else %>
+      <ul>
+        <%= for github_webhook <- @webhooks.github do %>
+          <li class="mb-2 px-6 py-4 text-sm text-white bg-dark-200 rounded-sm">
+            <div class="pb-4 mb-4 border-b border-dark-500 flex items-center justify-between">
+              ID: <%= github_webhook.webhook_id %>
+              <div>
+                <div class="el-button-slim w-auto flex items-center">
+                  <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
+                  <%= length github_webhook.issue_syncs %> active syncs
+                </div>
+              </div>
+            </div>
+            <ul>
+              <%= for issue_sync <- github_webhook.issue_syncs do %>
+                <li>
+                  <%= issue_sync.source_name %>
+                  <span class="text-indigo-500 text-xl mx-4">⇄</span>
+                  <%= issue_sync.dest_name %>
+                </li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+</div>

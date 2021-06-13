@@ -3,6 +3,7 @@ defmodule Linear.Webhooks.GithubWebhook do
   import Ecto.Changeset
 
   alias Linear.Accounts.Account
+  alias Linear.Data.IssueSync
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -14,6 +15,7 @@ defmodule Linear.Webhooks.GithubWebhook do
     field :webhook_id, :integer
 
     belongs_to :account, Account
+    has_many :issue_syncs, IssueSync, foreign_key: :github_internal_webhook_id
 
     timestamps()
   end
