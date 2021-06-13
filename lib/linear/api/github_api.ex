@@ -1,7 +1,6 @@
 defmodule Linear.GithubAPI do
   alias Tentacat.Client
   alias Linear.Accounts.Account
-  alias Linear.Data.IssueSync
 
   @webhook_events ["issues", "issue_comment"]
 
@@ -9,9 +8,9 @@ defmodule Linear.GithubAPI do
     Tentacat.Client.new(%{access_token: account.github_token})
   end
 
-  def to_repo_key!(issue_sync = %IssueSync{}) do
-    {issue_sync.repo_owner, issue_sync.repo_name}
-  end
+  def to_repo_key!(%{repo_owner: repo_owner, repo_name: repo_name})
+    when is_binary(repo_owner) and is_binary(repo_name),
+    do: {repo_owner, repo_name}
 
   def viewer(client = %Client{}) do
     {200, result, _response} = Tentacat.Users.me(client)
