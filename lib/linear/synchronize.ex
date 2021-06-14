@@ -30,6 +30,50 @@ defmodule Linear.Synchronize do
     gh_repo = Gh.Repo.new(gh_repo)
     gh_issue = Gh.Issue.new(gh_issue)
 
+    handle_github_issue_or_pr_opened(gh_repo, gh_issue)
+  end
+
+  def handle_incoming(:github, %{"action" => "opened", "pull_request" => gh_issue, "repository" => gh_repo}) do
+    gh_repo = Gh.Repo.new(gh_repo)
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_opened(gh_repo, gh_issue)
+  end
+
+  def handle_incoming(:github, %{"action" => "closed", "issue" => gh_issue}) do
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_closed(gh_issue)
+  end
+
+  def handle_incoming(:github, %{"action" => "closed", "pull_request" => gh_issue}) do
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_closed(gh_issue)
+  end
+
+  def handle_incoming(:github, %{"action" => "created", "comment" => gh_comment, "issue" => gh_issue}) do
+    gh_issue = Gh.Issue.new(gh_issue)
+    gh_comment = Gh.Comment.new(gh_comment)
+
+    handle_github_comment_created(gh_issue, gh_comment)
+  end
+
+  def handle_incoming(:github, %{"action" => "labeled"} = params) do
+    IO.inspect(params)
+  end
+
+  def handle_incoming(:github, %{"action" => "unlabeled"} = params) do
+    IO.inspect(params)
+  end
+
+  def handle_incoming(scope, params) do
+    Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
+  end
+
+  @doc """
+  """
+  def handle_github_issue_or_pr_opened(%Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
     case parse_linear_issue_ids(gh_issue.title) do
       [] ->
         Enum.each Data.list_issue_syncs_by_repo_id(gh_repo.id), fn issue_sync ->
@@ -41,31 +85,9 @@ defmodule Linear.Synchronize do
     end
   end
 
-  def handle_incoming(:github, %{"action" => "created", "comment" => gh_comment, "issue" => gh_issue}) do
-    gh_issue = Gh.Issue.new(gh_issue)
-    gh_comment = Gh.Comment.new(gh_comment)
-
-    Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
-      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
-
-      result = LinearAPI.create_comment session,
-        issueId: ln_issue.id,
-        body: ContentWriter.linear_comment_body(gh_comment)
-
-      case result do
-        {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => attrs}}}} ->
-          {:ok, ln_comment} = Data.create_ln_comment(ln_issue, Map.put(attrs, "github_comment_id", gh_comment.id))
-          {:ok, ln_comment}
-
-        error ->
-          Logger.error("Error syncing Github comment to Linear, #{inspect error}")
-      end
-    end
-  end
-
-  def handle_incoming(:github, %{"action" => "closed", "issue" => gh_issue}) do
-    gh_issue = Gh.Issue.new(gh_issue)
-
+  @doc """
+  """
+  def handle_github_issue_or_pr_closed(%Gh.Issue{} = gh_issue) do
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
       if ln_issue.issue_sync.close_state_id != nil and not ln_issue.issue_sync.close_on_open do
         session = LinearAPI.Session.new(ln_issue.issue_sync.account)
@@ -85,24 +107,25 @@ defmodule Linear.Synchronize do
     end
   end
 
-  def handle_incoming(:github, %{"action" => "opened"} = params) do
-    IO.inspect(params)
-  end
+  @doc """
+  """
+  def handle_github_comment_created(%Gh.Issue{} = gh_issue, %Gh.Comment{} = gh_comment) do
+    Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
+      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
 
-  def handle_incoming(:github, %{"action" => "closed"} = params) do
-    IO.inspect(params)
-  end
+      result = LinearAPI.create_comment session,
+        issueId: ln_issue.id,
+        body: ContentWriter.linear_comment_body(gh_comment)
 
-  def handle_incoming(:github, %{"action" => "labeled"} = params) do
-    IO.inspect(params)
-  end
+      case result do
+        {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => attrs}}}} ->
+          {:ok, ln_comment} = Data.create_ln_comment(ln_issue, Map.put(attrs, "github_comment_id", gh_comment.id))
+          {:ok, ln_comment}
 
-  def handle_incoming(:github, %{"action" => "unlabeled"} = params) do
-    IO.inspect(params)
-  end
-
-  def handle_incoming(scope, params) do
-    Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
+        error ->
+          Logger.error("Error syncing Github comment to Linear, #{inspect error}")
+      end
+    end
   end
 
   @doc """
