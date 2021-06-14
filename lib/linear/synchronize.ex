@@ -85,14 +85,34 @@ defmodule Linear.Synchronize do
     end
   end
 
+  def handle_incoming(:github, %{"action" => "opened"} = params) do
+    IO.inspect(params)
+  end
+
+  def handle_incoming(:github, %{"action" => "closed"} = params) do
+    IO.inspect(params)
+  end
+
   def handle_incoming(scope, params) do
     Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
   end
 
+  @doc """
+  Parses Linear issue identifiers from a binary.
+
+  ## Examples
+
+    iex> parse_linear_issue_ids("[LN-93] My Github issue")
+    ["[LN-93]"]
+
+  """
   def parse_linear_issue_ids(title) when is_binary(title) do
     Regex.scan(~r/\[[A-Z0-9]+-\d+\]/, title) |> List.flatten()
   end
 
+  @doc """
+  Creates a Linear issue given an issue_sync and Github data.
+  """
   def create_ln_issue_from_gh_issue(issue_sync, %Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
     session = LinearAPI.Session.new(issue_sync.account)
 

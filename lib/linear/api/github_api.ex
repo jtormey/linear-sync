@@ -2,7 +2,7 @@ defmodule Linear.GithubAPI do
   alias Tentacat.Client
   alias Linear.Accounts.Account
 
-  @webhook_events ["issues", "issue_comment"]
+  @webhook_events ["issues", "issue_comment", "pull_request"]
 
   def client(account = %Account{}) do
     Tentacat.Client.new(%{access_token: account.github_token})
