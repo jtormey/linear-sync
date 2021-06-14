@@ -55,6 +55,10 @@ defmodule Linear.Synchronize do
     end
   end
 
+  def handle_incoming(:linear, %{"action" => "update"} = params) do
+    IO.inspect(params)
+  end
+
   def handle_incoming(scope, params) do
     Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
   end
