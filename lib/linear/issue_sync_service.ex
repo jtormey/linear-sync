@@ -47,8 +47,8 @@ defmodule Linear.IssueSyncService do
            %{linear_internal_webhook: linear_internal_webhook} <- issue_sync,
            %{github_internal_webhook: github_internal_webhook} <- issue_sync,
            {:ok, issue_sync} <- Data.disable_issue_sync(issue_sync),
-           {:ok, _linear_webhook} <- Webhooks.delete_webhook(linear_internal_webhook),
-           {:ok, _github_webhook} <- Webhooks.delete_webhook(github_internal_webhook) do
+           {:ok, _linear_webhook} <- Webhooks.delete_webhook(linear_internal_webhook, issue_sync),
+           {:ok, _github_webhook} <- Webhooks.delete_webhook(github_internal_webhook, issue_sync) do
         issue_sync
       else
         {:error, reason} ->

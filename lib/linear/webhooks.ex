@@ -33,11 +33,11 @@ defmodule Linear.Webhooks do
   """
   def list_webhooks(%Account{} = account) do
     query_webhooks = fn query ->
-      query
-      |> where(account_id: ^account.id)
-      |> order_by(desc: :inserted_at)
-      |> preload(:issue_syncs)
-      |> Repo.all()
+      Repo.all from webhook in query,
+        join: issue_sync in assoc(webhook, :issue_syncs),
+        where: issue_sync.account_id == ^account.id,
+        order_by: {:desc, :inserted_at},
+        preload: [issue_syncs: issue_sync]
     end
 
     %{
@@ -106,7 +106,7 @@ defmodule Linear.Webhooks do
     attrs = Map.take(issue_sync, [:team_id])
 
     %LinearWebhook{}
-    |> LinearWebhook.create_changeset(issue_sync.account, attrs)
+    |> LinearWebhook.create_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -114,7 +114,7 @@ defmodule Linear.Webhooks do
     attrs = Map.take(issue_sync, [:repo_id, :repo_owner, :repo_name])
 
     %GithubWebhook{}
-    |> GithubWebhook.create_changeset(issue_sync.account, attrs)
+    |> GithubWebhook.create_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -127,15 +127,15 @@ defmodule Linear.Webhooks do
   @doc """
   Deletes a webhook. If successful, it means that the webhook was uninstalled.
   """
-  def delete_webhook(nil), do: nil
+  def delete_webhook(nil, _issue_sync), do: nil
 
-  def delete_webhook(%_Webhook{} = webhook) do
-    webhook = Repo.preload(webhook, [:account])
+  def delete_webhook(%_Webhook{} = webhook, %IssueSync{} = issue_sync) do
+    issue_sync = Repo.preload(issue_sync, [:account])
 
     Repo.transaction fn ->
       with :ok <- check_webhook_references(webhook),
            {:ok, _webhook} <- Repo.delete(webhook),
-           :ok <- uninstall_webhook(webhook) do
+           :ok <- uninstall_webhook(webhook, issue_sync) do
         webhook
       else
         {:error, :webhook_has_references} ->
@@ -148,8 +148,8 @@ defmodule Linear.Webhooks do
     end
   end
 
-  defp uninstall_webhook(%LinearWebhook{} = linear_webhook) do
-    result = LinearAPI.delete_webhook LinearAPI.Session.new(linear_webhook.account),
+  defp uninstall_webhook(%LinearWebhook{} = linear_webhook, %IssueSync{} = issue_sync) do
+    result = LinearAPI.delete_webhook LinearAPI.Session.new(issue_sync.account),
       id: linear_webhook.webhook_id
 
     case result do
@@ -165,8 +165,8 @@ defmodule Linear.Webhooks do
     end
   end
 
-  defp uninstall_webhook(%GithubWebhook{} = github_webhook) do
-    client = GithubAPI.client(github_webhook.account)
+  defp uninstall_webhook(%GithubWebhook{} = github_webhook, %IssueSync{} = issue_sync) do
+    client = GithubAPI.client(issue_sync.account)
     repo_key = GithubAPI.to_repo_key!(github_webhook)
 
     result = GithubAPI.delete_webhook client, repo_key,
