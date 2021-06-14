@@ -19,19 +19,20 @@ defmodule LinearWeb.SessionController do
     end
   end
 
-  def create(conn, %{"account" => %{"api_key" => api_key} = account_attrs}) do
-    case Accounts.get_account_by(api_key: api_key) do
-      %Account{} = account ->
+  def create(conn, %{"account" => %{"api_key" => api_key}}) do
+    case Accounts.find_or_create_account(api_key) do
+      {:ok, %Account{} = account} ->
         handle_account(conn, account)
 
-      nil ->
-        case Accounts.create_account(account_attrs) do
-          {:ok, %Account{} = account} ->
-            handle_account(conn, account)
+      {:replaced, %Account{} = account} ->
+        conn
+        |> put_flash(:info, "We found an existing Linear organization, welcome back!")
+        |> handle_account(account)
 
-          {:error, %Ecto.Changeset{} = changeset} ->
-            render(conn, "index.html", changeset: changeset, page_title: @page_title)
-        end
+      {:error, :invalid_api_key} ->
+        conn
+        |> put_flash(:error, "Please enter a valid Linear API key.")
+        |> redirect(to: Routes.dashboard_path(conn, :index))
     end
   end
 

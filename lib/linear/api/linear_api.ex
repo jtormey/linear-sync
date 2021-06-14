@@ -33,6 +33,14 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
+  def organization(session = %Session{}) do
+    query = %Query{
+      operation: :organization,
+      fields: [:id, :name]
+    }
+    graphql session, GraphqlBuilder.query(query)
+  end
+
   def teams(session = %Session{}) do
     query = %Query{
       operation: :teams,
