@@ -93,6 +93,14 @@ defmodule Linear.Synchronize do
     IO.inspect(params)
   end
 
+  def handle_incoming(:github, %{"action" => "labeled"} = params) do
+    IO.inspect(params)
+  end
+
+  def handle_incoming(:github, %{"action" => "unlabeled"} = params) do
+    IO.inspect(params)
+  end
+
   def handle_incoming(scope, params) do
     Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
   end
