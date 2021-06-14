@@ -28,6 +28,13 @@ defmodule Linear.GithubAPI.GithubData do
     end
   end
 
+  defmodule __MODULE__.Label do
+    @enforce_keys [:id, :name, :description, :color]
+    defstruct [:id, :name, :description, :color]
+
+    def new(attrs), do: GithubData.new(__MODULE__, attrs)
+  end
+
   defmodule __MODULE__.User do
     @enforce_keys [:id, :login, :html_url]
     defstruct [:id, :login, :html_url]

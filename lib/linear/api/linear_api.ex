@@ -59,13 +59,24 @@ defmodule Linear.LinearAPI do
     """
   end
 
-  def issue(session = %Session{}, issue_id) do
-    query = %Query{
-      operation: :issue,
-      variables: [id: issue_id],
-      fields: [:id, :title, :description]
+  def issue(session = %Session{}, issue_id) when is_binary(issue_id) do
+    query = """
+    query($id: String!) {
+      issue(id: $id) {
+        id
+        title
+        description
+        labels {
+          nodes {
+            id
+            name
+          }
+        }
+      }
     }
-    graphql session, GraphqlBuilder.query(query)
+    """
+    graphql session, query,
+      variables: [id: issue_id]
   end
 
   def create_issue(session = %Session{}, opts) do
@@ -161,6 +172,19 @@ defmodule Linear.LinearAPI do
       fields: [:success]
     }
     graphql session, GraphqlBuilder.mutation(query)
+  end
+
+  def list_issue_labels(session = %Session{}) do
+    graphql session, """
+    query {
+      issueLabels {
+        nodes {
+          id
+          name
+        }
+      }
+    }
+    """
   end
 
   defp graphql(session = %Session{}, query, opts \\ []) when is_binary(query) do

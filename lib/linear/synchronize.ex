@@ -59,12 +59,32 @@ defmodule Linear.Synchronize do
     handle_github_comment_created(gh_issue, gh_comment)
   end
 
-  def handle_incoming(:github, %{"action" => "labeled"} = params) do
-    IO.inspect(params)
+  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label, "issue" => gh_issue}) do
+    gh_label = Gh.Label.new(gh_label)
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_labeled(gh_issue, gh_label)
   end
 
-  def handle_incoming(:github, %{"action" => "unlabeled"} = params) do
-    IO.inspect(params)
+  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label, "pull_request" => gh_issue}) do
+    gh_label = Gh.Label.new(gh_label)
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_labeled(gh_issue, gh_label)
+  end
+
+  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label, "issue" => gh_issue}) do
+    gh_label = Gh.Label.new(gh_label)
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_unlabeled(gh_issue, gh_label)
+  end
+
+  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label, "pull_request" => gh_issue}) do
+    gh_label = Gh.Label.new(gh_label)
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    handle_github_issue_or_pr_unlabeled(gh_issue, gh_label)
   end
 
   def handle_incoming(scope, params) do
@@ -125,6 +145,74 @@ defmodule Linear.Synchronize do
         error ->
           Logger.error("Error syncing Github comment to Linear, #{inspect error}")
       end
+    end
+  end
+
+  @doc """
+  """
+  def handle_github_issue_or_pr_labeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
+    Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
+      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
+
+      if ln_label = get_corresponding_ln_issue_label(ln_issue.issue_sync, gh_label) do
+        {:ok, %{"data" => %{"issue" => issue}}} = LinearAPI.issue session, ln_issue.id
+
+        current_label_ids = issue["labels"]["nodes"] |> Enum.map(& &1["id"])
+
+        result = LinearAPI.update_issue session,
+          issueId: ln_issue.id,
+          labelIds: current_label_ids ++ [ln_label["id"]]
+
+        case result do
+          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
+            :ok
+
+          error ->
+            Logger.error("Error syncing status to Linear issue, #{inspect error}")
+        end
+      end
+    end
+  end
+
+  @doc """
+  """
+  def handle_github_issue_or_pr_unlabeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
+    Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
+      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
+
+      if ln_label = get_corresponding_ln_issue_label(ln_issue.issue_sync, gh_label) do
+        {:ok, %{"data" => %{"issue" => issue}}} = LinearAPI.issue session, ln_issue.id
+
+        current_label_ids = issue["labels"]["nodes"] |> Enum.map(& &1["id"])
+
+        result = LinearAPI.update_issue session,
+          issueId: ln_issue.id,
+          labelIds: current_label_ids -- [ln_label["id"]]
+
+        case result do
+          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
+            :ok
+
+          error ->
+            Logger.error("Error syncing status to Linear issue, #{inspect error}")
+        end
+      end
+    end
+  end
+
+  defp get_corresponding_ln_issue_label(issue_sync, %Gh.Label{} = gh_label) do
+    session = LinearAPI.Session.new(issue_sync.account)
+
+    case LinearAPI.list_issue_labels(session) do
+      {:ok, %{"data" => %{"issueLabels" => %{"nodes" => issue_labels}}}} ->
+        Enum.find issue_labels, fn ln_label ->
+          match? = String.downcase(ln_label["name"]) == gh_label.name
+          match? && ln_label
+        end
+
+      error ->
+        Logger.error("Error syncing Github issue to Linear, #{inspect error}")
+        nil
     end
   end
 
