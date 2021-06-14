@@ -2,8 +2,8 @@ defmodule Linear.GithubAPI.GithubData do
   alias __MODULE__
 
   defmodule __MODULE__.Repo do
-    @enforce_keys [:id]
-    defstruct [:id]
+    @enforce_keys [:id, :full_name, :html_url]
+    defstruct [:id, :full_name, :html_url]
 
     def new(attrs), do: GithubData.new(__MODULE__, attrs)
   end

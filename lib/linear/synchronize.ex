@@ -20,19 +20,20 @@ defmodule Linear.Synchronize do
   alias Linear.Data
   alias Linear.LinearAPI
   alias Linear.GithubAPI
-  alias Linear.GithubAPI.GithubData
+  alias Linear.GithubAPI.GithubData, as: Gh
+  alias Linear.Synchronize.ContentWriter
 
   @doc """
   Given a scope, handles an incoming webhook message.
   """
   def handle_incoming(:github, %{"action" => "opened", "issue" => gh_issue, "repository" => gh_repo}) do
-    gh_repo = GithubData.Repo.new(gh_repo)
-    gh_issue = GithubData.Issue.new(gh_issue)
+    gh_repo = Gh.Repo.new(gh_repo)
+    gh_issue = Gh.Issue.new(gh_issue)
 
     case parse_linear_issue_ids(gh_issue.title) do
       [] ->
         Enum.each Data.list_issue_syncs_by_repo_id(gh_repo.id), fn issue_sync ->
-          create_ln_issue_from_gh_issue(issue_sync, gh_issue)
+          create_ln_issue_from_gh_issue(issue_sync, gh_repo, gh_issue)
         end
 
       _issue_ids ->
@@ -41,22 +42,15 @@ defmodule Linear.Synchronize do
   end
 
   def handle_incoming(:github, %{"action" => "created", "comment" => gh_comment, "issue" => gh_issue}) do
-    gh_issue = GithubData.Issue.new(gh_issue)
-    gh_comment = GithubData.Comment.new(gh_comment)
+    gh_issue = Gh.Issue.new(gh_issue)
+    gh_comment = Gh.Comment.new(gh_comment)
 
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
       session = LinearAPI.Session.new(ln_issue.issue_sync.account)
 
-      body =
-        """
-        #{gh_comment.body}
-        ___
-        [Comment](#{gh_comment.html_url}) by [@#{gh_comment.user.login}](#{gh_comment.user.html_url}) on GitHub
-        """
-
       result = LinearAPI.create_comment session,
         issueId: ln_issue.id,
-        body: body
+        body: ContentWriter.linear_comment_body(gh_comment)
 
       case result do
         {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => attrs}}}} ->
@@ -70,7 +64,7 @@ defmodule Linear.Synchronize do
   end
 
   def handle_incoming(:github, %{"action" => "closed", "issue" => gh_issue}) do
-    gh_issue = GithubData.Issue.new(gh_issue)
+    gh_issue = Gh.Issue.new(gh_issue)
 
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
       if ln_issue.issue_sync.close_state_id != nil and not ln_issue.issue_sync.close_on_open do
@@ -99,29 +93,13 @@ defmodule Linear.Synchronize do
     Regex.scan(~r/\[[A-Z0-9]+-\d+\]/, title) |> List.flatten()
   end
 
-  def create_ln_issue_from_gh_issue(issue_sync, %GithubData.Issue{} = gh_issue) do
+  def create_ln_issue_from_gh_issue(issue_sync, %Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
     session = LinearAPI.Session.new(issue_sync.account)
-
-    issue_name = "#{issue_sync.repo_owner}/#{issue_sync.repo_name} ##{gh_issue.number}"
-
-    title =
-      """
-      "#{gh_issue.title}" (#{issue_name})
-      """
-
-    description =
-      """
-      #{gh_issue.body}
-
-      #{unless gh_issue.body == "", do: "___"}
-
-      [#{issue_name}](#{gh_issue.html_url}) by [@#{gh_issue.user.login}](#{gh_issue.user.html_url}) on GitHub
-      """
 
     opts = [
       teamId: issue_sync.team_id,
-      title: title,
-      description: description
+      title: ContentWriter.linear_issue_title(gh_repo, gh_issue),
+      description: ContentWriter.linear_issue_body(gh_repo, gh_issue)
     ]
 
     opts = if issue_sync.open_state_id != nil do
@@ -149,13 +127,10 @@ defmodule Linear.Synchronize do
         {:ok, ln_issue} = Data.create_ln_issue(issue_sync, Map.put(attrs, "github_issue_id", gh_issue.id))
 
         if issue_sync.close_on_open do
-          comment =
-            """
-            Automatically moved to [Linear (##{ln_issue.number})](#{ln_issue.url})
-            """
-
           client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
           repo_key = GithubAPI.to_repo_key!(issue_sync)
+
+          comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
 
           GithubAPI.create_issue_comment(client, repo_key, gh_issue.number, comment)
           GithubAPI.close_issue(client, repo_key, gh_issue.number)
