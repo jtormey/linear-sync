@@ -19,6 +19,7 @@ defmodule Linear.Synchronize do
   alias Linear.Accounts
   alias Linear.Data
   alias Linear.LinearAPI
+  alias Linear.LinearQuery
   alias Linear.GithubAPI
   alias Linear.GithubAPI.GithubData, as: Gh
   alias Linear.Synchronize.ContentWriter
@@ -26,65 +27,32 @@ defmodule Linear.Synchronize do
   @doc """
   Given a scope, handles an incoming webhook message.
   """
-  def handle_incoming(:github, %{"action" => "opened", "issue" => gh_issue, "repository" => gh_repo}) do
-    gh_repo = Gh.Repo.new(gh_repo)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_opened(gh_repo, gh_issue)
+  def handle_incoming(:github, %{"action" => "opened", "repository" => gh_repo} = params) do
+    if gh_issue = params["issue"] || params["pull_request"] do
+      handle_github_issue_opened(Gh.Repo.new(gh_repo), Gh.Issue.new(gh_issue))
+    end
   end
 
-  def handle_incoming(:github, %{"action" => "opened", "pull_request" => gh_issue, "repository" => gh_repo}) do
-    gh_repo = Gh.Repo.new(gh_repo)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_opened(gh_repo, gh_issue)
-  end
-
-  def handle_incoming(:github, %{"action" => "closed", "issue" => gh_issue}) do
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_closed(gh_issue)
-  end
-
-  def handle_incoming(:github, %{"action" => "closed", "pull_request" => gh_issue}) do
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_closed(gh_issue)
+  def handle_incoming(:github, %{"action" => "closed"} = params) do
+    if gh_issue = params["issue"] || params["pull_request"] do
+      handle_github_issue_closed(Gh.Issue.new(gh_issue))
+    end
   end
 
   def handle_incoming(:github, %{"action" => "created", "comment" => gh_comment, "issue" => gh_issue}) do
-    gh_issue = Gh.Issue.new(gh_issue)
-    gh_comment = Gh.Comment.new(gh_comment)
-
-    handle_github_comment_created(gh_issue, gh_comment)
+    handle_github_comment_created(Gh.Issue.new(gh_issue), Gh.Comment.new(gh_comment))
   end
 
-  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label, "issue" => gh_issue}) do
-    gh_label = Gh.Label.new(gh_label)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_labeled(gh_issue, gh_label)
+  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label} = params) do
+    if gh_issue = params["issue"] || params["pull_request"] do
+      handle_github_issue_labeled(Gh.Issue.new(gh_issue), Gh.Label.new(gh_label))
+    end
   end
 
-  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label, "pull_request" => gh_issue}) do
-    gh_label = Gh.Label.new(gh_label)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_labeled(gh_issue, gh_label)
-  end
-
-  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label, "issue" => gh_issue}) do
-    gh_label = Gh.Label.new(gh_label)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_unlabeled(gh_issue, gh_label)
-  end
-
-  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label, "pull_request" => gh_issue}) do
-    gh_label = Gh.Label.new(gh_label)
-    gh_issue = Gh.Issue.new(gh_issue)
-
-    handle_github_issue_or_pr_unlabeled(gh_issue, gh_label)
+  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label} = params) do
+    if gh_issue = params["issue"] || params["pull_request"] do
+      handle_github_issue_unlabeled(Gh.Issue.new(gh_issue), Gh.Label.new(gh_label))
+    end
   end
 
   def handle_incoming(scope, params) do
@@ -92,8 +60,9 @@ defmodule Linear.Synchronize do
   end
 
   @doc """
+  Handles an issue or pull request opened event.
   """
-  def handle_github_issue_or_pr_opened(%Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
+  def handle_github_issue_opened(%Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
     case parse_linear_issue_ids(gh_issue.title) do
       [] ->
         Enum.each Data.list_issue_syncs_by_repo_id(gh_repo.id), fn issue_sync ->
@@ -106,113 +75,123 @@ defmodule Linear.Synchronize do
   end
 
   @doc """
+  Handles an issue or pull request closed event.
   """
-  def handle_github_issue_or_pr_closed(%Gh.Issue{} = gh_issue) do
+  def handle_github_issue_closed(%Gh.Issue{} = gh_issue) do
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
       if ln_issue.issue_sync.close_state_id != nil and not ln_issue.issue_sync.close_on_open do
         session = LinearAPI.Session.new(ln_issue.issue_sync.account)
-
-        result = LinearAPI.update_issue session,
-          issueId: ln_issue.id,
-          stateId: ln_issue.issue_sync.close_state_id
-
-        case result do
-          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
-            :ok
-
-          error ->
-            Logger.error("Error syncing status to Linear issue, #{inspect error}")
-        end
+        LinearQuery.update_issue(session, ln_issue, stateId: ln_issue.issue_sync.close_state_id)
       end
     end
   end
 
   @doc """
+  Handles a comment created event.
   """
   def handle_github_comment_created(%Gh.Issue{} = gh_issue, %Gh.Comment{} = gh_comment) do
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
       session = LinearAPI.Session.new(ln_issue.issue_sync.account)
 
-      result = LinearAPI.create_comment session,
-        issueId: ln_issue.id,
+      args = [
         body: ContentWriter.linear_comment_body(gh_comment)
+      ]
 
-      case result do
-        {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => attrs}}}} ->
-          {:ok, ln_comment} = Data.create_ln_comment(ln_issue, Map.put(attrs, "github_comment_id", gh_comment.id))
-          {:ok, ln_comment}
-
-        error ->
-          Logger.error("Error syncing Github comment to Linear, #{inspect error}")
+      with {:ok, attrs} <- LinearQuery.create_issue_comment(session, ln_issue, args) do
+        attrs = Map.put(attrs, "github_comment_id", gh_comment.id)
+        {:ok, _ln_comment} = Data.create_ln_comment(ln_issue, attrs)
       end
     end
   end
 
   @doc """
+  Handles an issue or pull request labeled event.
   """
-  def handle_github_issue_or_pr_labeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
+  def handle_github_issue_labeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
-      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
-
       if ln_label = get_corresponding_ln_issue_label(ln_issue.issue_sync, gh_label) do
-        {:ok, %{"data" => %{"issue" => issue}}} = LinearAPI.issue session, ln_issue.id
-
-        current_label_ids = issue["labels"]["nodes"] |> Enum.map(& &1["id"])
-
-        result = LinearAPI.update_issue session,
-          issueId: ln_issue.id,
-          labelIds: current_label_ids ++ [ln_label["id"]]
-
-        case result do
-          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
-            :ok
-
-          error ->
-            Logger.error("Error syncing status to Linear issue, #{inspect error}")
-        end
+        update_ln_issue_labels(ln_issue, & &1 ++ [ln_label["id"]])
       end
     end
   end
 
   @doc """
+  Handles an issue or pull request unlabeled event.
   """
-  def handle_github_issue_or_pr_unlabeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
+  def handle_github_issue_unlabeled(%Gh.Issue{} = gh_issue, %Gh.Label{} = gh_label) do
     Enum.each Data.list_ln_issues_by_github_issue_id(gh_issue.id), fn ln_issue ->
-      session = LinearAPI.Session.new(ln_issue.issue_sync.account)
-
       if ln_label = get_corresponding_ln_issue_label(ln_issue.issue_sync, gh_label) do
-        {:ok, %{"data" => %{"issue" => issue}}} = LinearAPI.issue session, ln_issue.id
-
-        current_label_ids = issue["labels"]["nodes"] |> Enum.map(& &1["id"])
-
-        result = LinearAPI.update_issue session,
-          issueId: ln_issue.id,
-          labelIds: current_label_ids -- [ln_label["id"]]
-
-        case result do
-          {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
-            :ok
-
-          error ->
-            Logger.error("Error syncing status to Linear issue, #{inspect error}")
-        end
+        update_ln_issue_labels(ln_issue, & &1 -- [ln_label["id"]])
       end
+    end
+  end
+
+  defp update_ln_issue_labels(ln_issue, map_fun) when is_function(map_fun, 1) do
+    session = LinearAPI.Session.new(ln_issue.issue_sync.account)
+
+    with {:ok, labels} = LinearQuery.list_issue_labels(session, ln_issue) do
+      label_ids = Enum.map(labels, & &1["id"])
+      LinearQuery.update_issue(session, ln_issue, labelIds: map_fun.(label_ids))
     end
   end
 
   defp get_corresponding_ln_issue_label(issue_sync, %Gh.Label{} = gh_label) do
     session = LinearAPI.Session.new(issue_sync.account)
 
-    case LinearAPI.list_issue_labels(session) do
-      {:ok, %{"data" => %{"issueLabels" => %{"nodes" => issue_labels}}}} ->
-        Enum.find issue_labels, fn ln_label ->
-          match? = String.downcase(ln_label["name"]) == gh_label.name
-          match? && ln_label
-        end
-
-      error ->
-        Logger.error("Error syncing Github issue to Linear, #{inspect error}")
+    with {:ok, ln_labels} <- LinearQuery.list_labels(session) do
+      Enum.find ln_labels, fn ln_label ->
+        match? = String.downcase(ln_label["name"]) == gh_label.name
+        match? && ln_label
+      end
+    else
+      :error ->
         nil
+    end
+  end
+
+  @doc """
+  Creates a Linear issue given an issue_sync and Github data.
+  """
+  def create_ln_issue_from_gh_issue(issue_sync, %Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
+    session = LinearAPI.Session.new(issue_sync.account)
+
+    args = [
+      teamId: issue_sync.team_id,
+      title: ContentWriter.linear_issue_title(gh_repo, gh_issue),
+      description: ContentWriter.linear_issue_body(gh_repo, gh_issue)
+    ]
+
+    args = if issue_sync.open_state_id != nil do
+      Keyword.put(args, :stateId, issue_sync.open_state_id)
+    else
+      args
+    end
+
+    args = if issue_sync.label_id != nil do
+      Keyword.put(args, :labelIds, [issue_sync.label_id])
+    else
+      args
+    end
+
+    args = if issue_sync.assignee_id != nil do
+      Keyword.put(args, :assigneeId, issue_sync.assignee_id)
+    else
+      args
+    end
+
+    with {:ok, attrs} <- LinearQuery.create_issue(session, args) do
+      attrs = Map.put(attrs, "github_issue_id", gh_issue.id)
+      {:ok, ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+
+      if issue_sync.close_on_open do
+        client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+        repo_key = GithubAPI.to_repo_key!(issue_sync)
+
+        comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
+
+        GithubAPI.create_issue_comment(client, repo_key, gh_issue.number, comment)
+        GithubAPI.close_issue(client, repo_key, gh_issue.number)
+      end
     end
   end
 
@@ -227,59 +206,5 @@ defmodule Linear.Synchronize do
   """
   def parse_linear_issue_ids(title) when is_binary(title) do
     Regex.scan(~r/\[[A-Z0-9]+-\d+\]/, title) |> List.flatten()
-  end
-
-  @doc """
-  Creates a Linear issue given an issue_sync and Github data.
-  """
-  def create_ln_issue_from_gh_issue(issue_sync, %Gh.Repo{} = gh_repo, %Gh.Issue{} = gh_issue) do
-    session = LinearAPI.Session.new(issue_sync.account)
-
-    opts = [
-      teamId: issue_sync.team_id,
-      title: ContentWriter.linear_issue_title(gh_repo, gh_issue),
-      description: ContentWriter.linear_issue_body(gh_repo, gh_issue)
-    ]
-
-    opts = if issue_sync.open_state_id != nil do
-      Keyword.put(opts, :stateId, issue_sync.open_state_id)
-    else
-      opts
-    end
-
-    opts = if issue_sync.label_id != nil do
-      Keyword.put(opts, :labelIds, [issue_sync.label_id])
-    else
-      opts
-    end
-
-    opts = if issue_sync.assignee_id != nil do
-      Keyword.put(opts, :assigneeId, issue_sync.assignee_id)
-    else
-      opts
-    end
-
-    result = LinearAPI.create_issue session, opts
-
-    case result do
-      {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => attrs}}}} ->
-        {:ok, ln_issue} = Data.create_ln_issue(issue_sync, Map.put(attrs, "github_issue_id", gh_issue.id))
-
-        if issue_sync.close_on_open do
-          client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
-          repo_key = GithubAPI.to_repo_key!(issue_sync)
-
-          comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
-
-          GithubAPI.create_issue_comment(client, repo_key, gh_issue.number, comment)
-          GithubAPI.close_issue(client, repo_key, gh_issue.number)
-        end
-
-        {:ok, ln_issue}
-
-      error ->
-        Logger.error("Error syncing Github issue to Linear, #{inspect error}")
-        :error
-    end
   end
 end
