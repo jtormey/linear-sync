@@ -286,6 +286,12 @@ defmodule Linear.Synchronize do
 
       Enum.each(to_remove, &GithubAPI.remove_issue_labels(client, repo_key, ln_issue.github_issue_number, &1["name"]))
     end
+
+    with %{"data" => %{"stateId" => current_state_id}, "updatedFrom" => %{"stateId" => _prev_state_id}} <- params do
+      if current_state_id == issue_sync.close_state_id do
+        GithubAPI.close_issue(client, repo_key, ln_issue.github_issue_number)
+      end
+    end
   end
 
   @doc """
