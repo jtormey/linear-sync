@@ -23,6 +23,8 @@ defmodule Linear.Synchronize.ContentWriter do
     #{unless gh_issue.body == "", do: "___"}
 
     [#{issue_name}](#{gh_issue.html_url}) #{github_author_signature(gh_issue.user)}
+
+    *via LinearSync*
     """
   end
 
@@ -34,6 +36,8 @@ defmodule Linear.Synchronize.ContentWriter do
     #{gh_comment.body}
     ___
     [Comment](#{gh_comment.html_url})  #{github_author_signature(gh_comment.user)}
+
+    *via LinearSync*
     """
   end
 
@@ -49,9 +53,33 @@ defmodule Linear.Synchronize.ContentWriter do
   @doc """
   Returns the Github comment body for when an issue was moved to Linear.
   """
+  def github_issue_comment_body(%LnIssue{} = ln_issue, body) do
+    """
+    Comment from [Linear (##{ln_issue.number})](#{ln_issue.url})
+
+    #{body}
+
+    ---
+    *via LinearSync*
+    """
+  end
+
+  @doc """
+  Returns the Github comment body for when an issue was moved to Linear.
+  """
   def github_issue_moved_comment_body(%LnIssue{} = ln_issue) do
     """
     Automatically moved to [Linear (##{ln_issue.number})](#{ln_issue.url})
+
+    ---
+    *via LinearSync*
     """
+  end
+
+  @doc """
+  Returns true if the text contains the LinearSync comment signature.
+  """
+  def via_linear_sync?(body) do
+    String.contains?(body, "*via LinearSync*")
   end
 end

@@ -57,7 +57,17 @@ defmodule Linear.Synchronize do
 
   def handle_incoming(:linear, %{"action" => "update", "type" => "Issue"} = params) do
     if ln_issue = Data.get_ln_issue(params["data"]["id"]) do
-      handle_linear_issue_update(ln_issue, params)
+      if ln_issue.github_issue_number != nil do
+        handle_linear_issue_updated(ln_issue, params)
+      end
+    end
+  end
+
+  def handle_incoming(:linear, %{"action" => "create", "type" => "Comment"} = params) do
+    if ln_issue = Data.get_ln_issue(params["data"]["issue"]["id"]) do
+      if ln_issue.github_issue_number != nil do
+        handle_linear_comment_created(ln_issue, params)
+      end
     end
   end
 
@@ -103,7 +113,8 @@ defmodule Linear.Synchronize do
         body: ContentWriter.linear_comment_body(gh_comment)
       ]
 
-      with {:ok, attrs} <- LinearQuery.create_issue_comment(session, ln_issue, args) do
+      with false <- ContentWriter.via_linear_sync?(gh_comment.body),
+           {:ok, attrs} <- LinearQuery.create_issue_comment(session, ln_issue, args) do
         attrs = Map.put(attrs, "github_comment_id", gh_comment.id)
         {:ok, _ln_comment} = Data.create_ln_comment(ln_issue, attrs)
       end
@@ -216,50 +227,67 @@ defmodule Linear.Synchronize do
   @doc """
   Diffs an incoming Linear issue and syncs updates to Github.
   """
-  def handle_linear_issue_update(ln_issue, params) do
-    if ln_issue.github_issue_number != nil and not ln_issue_private?(params) do
+  def handle_linear_issue_updated(ln_issue, params) do
+    issue_sync = Data.get_issue_sync!(ln_issue.issue_sync_id)
+
+    session = LinearAPI.Session.new(issue_sync.account)
+
+    repo_key = GithubAPI.to_repo_key!(issue_sync)
+    client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+
+    with %{"data" => %{"labelIds" => current_label_ids}, "updatedFrom" => %{"labelIds" => prev_label_ids}} <- params,
+         {:ok, ln_labels} <- LinearQuery.list_labels(session),
+         {200, repo_labels, _response} <- GithubAPI.list_repository_labels(client, repo_key),
+         {200, issue_labels, _response} <- GithubAPI.list_issue_labels(client, repo_key, ln_issue.github_issue_number) do
+      issue_label_ids = Enum.map(issue_labels, & &1["id"])
+
+      added_ln_labels = current_label_ids -- prev_label_ids
+      removed_ln_labels = prev_label_ids -- current_label_ids
+
+      to_add = Enum.filter repo_labels, fn repo_label ->
+        if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
+          ln_label["id"] in added_ln_labels and repo_label["id"] not in issue_label_ids
+        end
+      end
+
+      to_remove = Enum.filter repo_labels, fn repo_label ->
+        if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
+          ln_label["id"] in removed_ln_labels and repo_label["id"] in issue_label_ids
+        end
+      end
+
+      Logger.info("Adding Github labels: #{inspect to_add}")
+      Logger.info("Removing Github labels: #{inspect to_remove}")
+
+      if to_add != [] do
+        GithubAPI.add_issue_labels(client, repo_key, ln_issue.github_issue_number, Enum.map(to_add, & &1["name"]))
+      end
+
+      Enum.each(to_remove, &GithubAPI.remove_issue_labels(client, repo_key, ln_issue.github_issue_number, &1["name"]))
+    end
+  end
+
+  @doc """
+  """
+  def handle_linear_comment_created(ln_issue, %{"data" => comment_data}) do
+    if not ContentWriter.via_linear_sync?(comment_data["body"]) do
       issue_sync = Data.get_issue_sync!(ln_issue.issue_sync_id)
 
       session = LinearAPI.Session.new(issue_sync.account)
 
-      repo_key = GithubAPI.to_repo_key!(issue_sync)
-      client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+      if not ln_issue_private?(session, ln_issue) do
+        repo_key = GithubAPI.to_repo_key!(issue_sync)
+        client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
 
-      with %{"data" => %{"labelIds" => current_label_ids}, "updatedFrom" => %{"labelIds" => prev_label_ids}} <- params,
-           {:ok, ln_labels} <- LinearQuery.list_labels(session),
-           {200, repo_labels, _response} <- GithubAPI.list_repository_labels(client, repo_key),
-           {200, issue_labels, _response} <- GithubAPI.list_issue_labels(client, repo_key, ln_issue.github_issue_number) do
-        issue_label_ids = Enum.map(issue_labels, & &1["id"])
-
-        added_ln_labels = current_label_ids -- prev_label_ids
-        removed_ln_labels = prev_label_ids -- current_label_ids
-
-        to_add = Enum.filter repo_labels, fn repo_label ->
-          if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
-            ln_label["id"] in added_ln_labels and repo_label["id"] not in issue_label_ids
-          end
-        end
-
-        to_remove = Enum.filter repo_labels, fn repo_label ->
-          if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
-            ln_label["id"] in removed_ln_labels and repo_label["id"] in issue_label_ids
-          end
-        end
-
-        Logger.info("Adding Github labels: #{inspect to_add}")
-        Logger.info("Removing Github labels: #{inspect to_remove}")
-
-        if to_add != [] do
-          GithubAPI.add_issue_labels(client, repo_key, ln_issue.github_issue_number, Enum.map(to_add, & &1["name"]))
-        end
-
-        Enum.each(to_remove, &GithubAPI.remove_issue_labels(client, repo_key, ln_issue.github_issue_number, &1["name"]))
+        comment = ContentWriter.github_issue_comment_body(ln_issue, comment_data["body"])
+        GithubAPI.create_issue_comment(client, repo_key, ln_issue.github_issue_number, comment)
       end
     end
   end
 
-  defp ln_issue_private?(%{"data" => issue_data}) do
-    issue_data["labels"] != nil and Enum.any?(issue_data["labels"], &String.downcase(&1["name"]) == "private")
+  defp ln_issue_private?(session, ln_issue) do
+    {:ok, labels} = LinearQuery.list_issue_labels(session, ln_issue)
+    Enum.any?(labels, &String.downcase(&1["name"]) == "private")
   end
 
   @doc """
