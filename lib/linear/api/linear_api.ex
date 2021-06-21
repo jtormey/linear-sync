@@ -97,7 +97,12 @@ defmodule Linear.LinearAPI do
           number,
           title,
           description,
-          url
+          url,
+          team {
+            id,
+            key,
+            name
+          }
         }
       }
     }

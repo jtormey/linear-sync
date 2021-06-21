@@ -187,16 +187,24 @@ defmodule Linear.Synchronize do
       attrs = Map.put(attrs, "github_issue_id", gh_issue.id)
       {:ok, ln_issue} = Data.create_ln_issue(issue_sync, attrs)
 
-      if issue_sync.close_on_open do
-        client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
-        repo_key = GithubAPI.to_repo_key!(issue_sync)
+      client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+      repo_key = GithubAPI.to_repo_key!(issue_sync)
 
+      GithubAPI.update_issue(client, repo_key, gh_issue.number, %{
+        "title" => format_issue_key(attrs) <> " " <> gh_issue.title
+      })
+
+      if issue_sync.close_on_open do
         comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
 
         GithubAPI.create_issue_comment(client, repo_key, gh_issue.number, comment)
         GithubAPI.close_issue(client, repo_key, gh_issue.number)
       end
     end
+  end
+
+  defp format_issue_key(%{"number" => issue_number, "team" => %{"key" => team_key}}) do
+    "[#{team_key}-#{issue_number}]"
   end
 
   @doc """
