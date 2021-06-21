@@ -26,7 +26,7 @@ defmodule Linear.Data do
 
   Raises `Ecto.NoResultsError` if the Issue sync does not exist.
   """
-  def get_issue_sync!(id), do: Repo.get!(IssueSync, id)
+  def get_issue_sync!(id), do: Repo.get!(IssueSync, id) |> Repo.preload([:account])
 
   def list_issue_syncs_by_repo_id(repo_id) do
     Repo.all from i in IssueSync,
@@ -92,6 +92,11 @@ defmodule Linear.Data do
   def change_issue_sync(%IssueSync{} = issue_sync, attrs \\ %{}) do
     IssueSync.changeset(issue_sync, attrs)
   end
+
+  @doc """
+  Gets a single ln_issue.
+  """
+  def get_ln_issue(id), do: Repo.get(LnIssue, id)
 
   def list_ln_issues_by_github_issue_id(github_issue_id) do
     Repo.all from l in LnIssue,
