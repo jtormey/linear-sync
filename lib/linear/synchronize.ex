@@ -1,18 +1,5 @@
 defmodule Linear.Synchronize do
-  @moduledoc """
-
-  From Github
-    - Open issue -> Create in Linear
-    - Comment on issue -> Comment in Linear
-    - Close issue -> Mark as Done in Linear
-
-  From Linear
-    - Mark issue as Done -> Close in Github
-    (?)
-    - Comment contains +sync-close -> Close in Github
-    - Comment contains +sync-comment -> Comment in Github
-
-  """
+  @moduledoc false
 
   require Logger
 
@@ -52,6 +39,14 @@ defmodule Linear.Synchronize do
   def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label} = params) do
     if gh_issue = params["issue"] || params["pull_request"] do
       handle_github_issue_unlabeled(Gh.Issue.new(gh_issue), Gh.Label.new(gh_label))
+    end
+  end
+
+  def handle_incoming(:linear, %{"action" => "create", "type" => "Issue"} = params) do
+    if not ln_issue_private?(params) do
+      Enum.each Data.list_issue_syncs_by_team_id(params["data"]["teamId"]), fn issue_sync ->
+        handle_linear_issue_created(issue_sync, params)
+      end
     end
   end
 
@@ -225,6 +220,32 @@ defmodule Linear.Synchronize do
   end
 
   @doc """
+  """
+  def handle_linear_issue_created(issue_sync, params) do
+    repo_key = GithubAPI.to_repo_key!(issue_sync)
+    client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
+
+    attrs =
+      params["data"]
+      |> Map.put("url", params["url"])
+
+    {201, gh_issue, _response} =
+      GithubAPI.create_issue(client, repo_key, %{
+        "title" => format_issue_key(attrs) <> " " <> attrs["title"],
+        "body" => ContentWriter.github_issue_body(attrs)
+      })
+
+    gh_issue = Gh.Issue.new(gh_issue)
+
+    attrs =
+      attrs
+      |> Map.put("github_issue_id", gh_issue.id)
+      |> Map.put("github_issue_number", gh_issue.number)
+
+    {:ok, _ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+  end
+
+  @doc """
   Diffs an incoming Linear issue and syncs updates to Github.
   """
   def handle_linear_issue_updated(ln_issue, params) do
@@ -268,6 +289,7 @@ defmodule Linear.Synchronize do
   end
 
   @doc """
+  Conditionally syncs a comment from Linear to Github.
   """
   def handle_linear_comment_created(ln_issue, %{"data" => comment_data}) do
     if not ContentWriter.via_linear_sync?(comment_data["body"]) do
@@ -283,6 +305,10 @@ defmodule Linear.Synchronize do
         GithubAPI.create_issue_comment(client, repo_key, ln_issue.github_issue_number, comment)
       end
     end
+  end
+
+  defp ln_issue_private?(%{"data" => issue_data}) do
+    issue_data["labels"] != nil and Enum.any?(issue_data["labels"], &String.downcase(&1["name"]) == "private")
   end
 
   defp ln_issue_private?(session, ln_issue) do

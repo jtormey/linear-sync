@@ -35,6 +35,13 @@ defmodule Linear.Data do
       preload: [account: a]
   end
 
+  def list_issue_syncs_by_team_id(team_id) do
+    Repo.all from i in IssueSync,
+      join: a in assoc(i, :account),
+      where: i.team_id == ^team_id and i.enabled == true,
+      preload: [account: a]
+  end
+
   @doc """
   Creates a issue_sync.
   """

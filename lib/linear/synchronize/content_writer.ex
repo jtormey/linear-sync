@@ -41,6 +41,18 @@ defmodule Linear.Synchronize.ContentWriter do
     """
   end
 
+  def github_issue_body(ln_issue) do
+    """
+    #{ln_issue["description"]}
+
+    #{if ln_issue["description"], do: "___"}
+
+    Automatically created from [Linear (##{ln_issue["number"]})](#{ln_issue["url"]})
+
+    *via LinearSync*
+    """
+  end
+
   @doc """
   Returns a signature for Linear issues with a link to the Github author.
   """

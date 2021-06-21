@@ -17,6 +17,11 @@ defmodule Linear.GithubAPI do
     result
   end
 
+  def create_issue(client = %Client{}, {owner, repo}, params) do
+    params = Map.take(params, ["title", "body"])
+    Tentacat.Issues.create(client, owner, repo, params)
+  end
+
   def close_issue(client = %Client{}, {owner, repo}, issue_number) do
     Tentacat.Issues.update(client, owner, repo, issue_number, %{"state" => "closed"})
   end
