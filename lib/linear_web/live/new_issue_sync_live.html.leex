@@ -64,16 +64,20 @@
         <%= select f, :label_id, @labels, prompt: "No label", class: "mr-4 pl-4 w-40 py-1 text-dark-600 text-sm cursor-pointer border-2 border-transparent hover:border-dark-200 outline-none rounded bg-transparent hover:bg-dark-100 transition-bg duration-100", disabled: Enum.empty?(@labels) %>
       </div>
 
-      <div class="border-b border-dark-300 mx-4 mb-6"></div>
+      <div class="flex items-center mb-3 relative">
+        <div class="px-4 py-1 w-32">
+          <label class="text-dark-500 text-sm">Assignee</label>
+        </div>
+        <%= select f, :assignee_id, @members, prompt: "No assignee", class: "mr-4 pl-4 w-40 py-1 text-dark-600 text-sm cursor-pointer border-2 border-transparent hover:border-dark-200 outline-none rounded bg-transparent hover:bg-dark-100 transition-bg duration-100", disabled: Enum.empty?(@labels) %>
 
-      <div class="flex items-center mb-3">
-        <%= label f, :assignee_id, class: "px-4" do %>
-          <%= checkbox f, :assignee_id, checked_value: @viewer["id"], unchecked_value: nil %>
-          <span class="text-dark-600 text-sm ml-2">
-            Self-assign new issues (<%= @viewer["name"] %>)
-          </span>
+        <%= if @viewer["id"] in Enum.map(@members, & &1[:value]) do %>
+          <div class="absolute right-4">
+            <button class="el-button-slim" phx-click="self_assign" type="button">Self-assign</button>
+          </div>
         <% end %>
       </div>
+
+      <div class="border-b border-dark-300 mx-4 mb-6"></div>
 
       <div class="flex items-center">
         <%= label f, :close_on_open, class: "px-4" do %>

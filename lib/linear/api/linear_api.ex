@@ -19,7 +19,8 @@ defmodule Linear.LinearAPI do
       variables: [id: team_id],
       fields: [
         labels: [nodes: [:id, :name, :archivedAt]],
-        states: [nodes: [:id, :name, :description, :archivedAt]]
+        states: [nodes: [:id, :name, :description, :archivedAt]],
+        members: [nodes: [:id, :name, :displayName]]
       ]
     }
     graphql session, GraphqlBuilder.query(query)

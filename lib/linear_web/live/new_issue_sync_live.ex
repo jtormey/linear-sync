@@ -25,6 +25,7 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:teams, Enum.map(teams, &decode_kv/1))
     |> assign(:labels, [])
     |> assign(:states, [])
+    |> assign(:members, [])
     |> assign(:changeset, IssueSync.assoc_changeset(%IssueSync{}, account, %{}))
 
     {:ok, socket}
@@ -44,6 +45,15 @@ defmodule LinearWeb.NewIssueSyncLive do
   end
 
   @impl true
+  def handle_event("self_assign", _params, socket) do
+    %{viewer: viewer, changeset: changeset} = socket.assigns
+
+    changeset = Ecto.Changeset.put_change(changeset, :assignee_id, viewer["id"])
+
+    {:noreply, assign(socket, :changeset, changeset)}
+  end
+
+  @impl true
   def handle_event("submit", _params, socket) do
     case Repo.insert(socket.assigns.changeset) do
       {:ok, _issue_sync} ->
@@ -59,6 +69,7 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:team_id, nil)
     |> assign(:labels, [])
     |> assign(:states, [])
+    |> assign(:members, [])
   end
 
   def load_team(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
@@ -70,6 +81,7 @@ defmodule LinearWeb.NewIssueSyncLive do
     |> assign(:team_id, team_id)
     |> assign(:labels, Enum.map(result["labels"]["nodes"], &decode_kv/1))
     |> assign(:states, Enum.map(result["states"]["nodes"], &decode_kv/1))
+    |> assign(:members, Enum.map(result["members"]["nodes"], &decode_kv/1))
   end
 
   def decode_kv(%{"id" => id, "name" => name}), do: [value: id, key: name]
