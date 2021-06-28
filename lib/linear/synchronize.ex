@@ -191,7 +191,8 @@ defmodule Linear.Synchronize do
       args
     end
 
-    with {:ok, attrs} <- LinearQuery.create_issue(session, args) do
+    with false <- ContentWriter.via_linear_sync?(gh_issue.body),
+         {:ok, attrs} <- LinearQuery.create_issue(session, args) do
       attrs =
         attrs
         |> Map.put("github_issue_id", gh_issue.id)
@@ -229,20 +230,22 @@ defmodule Linear.Synchronize do
       params["data"]
       |> Map.put("url", params["url"])
 
-    {201, gh_issue, _response} =
-      GithubAPI.create_issue(client, repo_key, %{
-        "title" => format_issue_key(attrs) <> " " <> attrs["title"],
-        "body" => ContentWriter.github_issue_body(attrs)
-      })
+    if not ContentWriter.via_linear_sync?(params["description"]) do
+      {201, gh_issue, _response} =
+        GithubAPI.create_issue(client, repo_key, %{
+          "title" => format_issue_key(attrs) <> " " <> attrs["title"],
+          "body" => ContentWriter.github_issue_body(attrs)
+        })
 
-    gh_issue = Gh.Issue.new(gh_issue)
+      gh_issue = Gh.Issue.new(gh_issue)
 
-    attrs =
-      attrs
-      |> Map.put("github_issue_id", gh_issue.id)
-      |> Map.put("github_issue_number", gh_issue.number)
+      attrs =
+        attrs
+        |> Map.put("github_issue_id", gh_issue.id)
+        |> Map.put("github_issue_number", gh_issue.number)
 
-    {:ok, _ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+      {:ok, _ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+    end
   end
 
   @doc """
