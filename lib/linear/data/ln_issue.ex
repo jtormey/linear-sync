@@ -9,9 +9,7 @@ defmodule Linear.Data.LnIssue do
   @foreign_key_type :binary_id
 
   schema "ln_issues" do
-    field :description, :string
     field :number, :integer
-    field :title, :string
     field :url, :string
     field :github_issue_id, :integer
     field :github_issue_number, :integer
@@ -25,8 +23,8 @@ defmodule Linear.Data.LnIssue do
   @doc false
   def assoc_changeset(ln_issue, issue_sync = %IssueSync{}, attrs) do
     ln_issue
-    |> cast(attrs, [:id, :number, :title, :description, :url, :github_issue_id, :github_issue_number])
-    |> validate_required([:id, :number, :title, :url, :github_issue_id, :github_issue_number])
+    |> cast(attrs, [:id, :number, :url, :github_issue_id, :github_issue_number])
+    |> validate_required([:id, :number, :url, :github_issue_id, :github_issue_number])
     |> put_assoc(:issue_sync, issue_sync)
   end
 end
