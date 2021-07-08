@@ -4,6 +4,7 @@ defmodule Linear.Data.IssueSync do
 
   alias Linear.Accounts.Account
   alias Linear.Data.LnIssue
+  alias Linear.Webhooks.{LinearWebhook, GithubWebhook}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -27,6 +28,9 @@ defmodule Linear.Data.IssueSync do
 
     belongs_to :account, Account
     has_many :ln_issues, LnIssue
+
+    belongs_to :linear_internal_webhook, LinearWebhook, on_replace: :nilify
+    belongs_to :github_internal_webhook, GithubWebhook, on_replace: :nilify
 
     timestamps(type: :utc_datetime)
   end

@@ -28,12 +28,12 @@ defmodule LinearWeb.DashboardLive do
   def handle_event("enable", %{"issue_sync_id" => id}, socket) do
     %{account: account} = socket.assigns
 
-    case IssueSyncService.enable_issue_sync(account, Data.get_issue_sync!(id)) do
-      :ok ->
+    case Data.get_issue_sync!(id) |> IssueSyncService.enable_issue_sync() do
+      {:ok, _issue_sync} ->
         {:noreply, assign(socket, :issue_syncs, Data.list_issue_syncs(account))}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to enabled issue sync (#{inspect reason})")}
+        {:noreply, put_flash(socket, :error, "Failed to enable issue sync (#{inspect reason})")}
     end
   end
 
@@ -41,12 +41,12 @@ defmodule LinearWeb.DashboardLive do
   def handle_event("disable", %{"issue_sync_id" => id}, socket) do
     %{account: account} = socket.assigns
 
-    case IssueSyncService.disable_issue_sync(account, Data.get_issue_sync!(id)) do
-      :ok ->
+    case Data.get_issue_sync!(id) |> IssueSyncService.disable_issue_sync() do
+      {:ok, _issue_sync} ->
         {:noreply, assign(socket, :issue_syncs, Data.list_issue_syncs(account))}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to enabled issue sync (#{inspect reason})")}
+        {:noreply, put_flash(socket, :error, "Failed to disable issue sync (#{inspect reason})")}
     end
   end
 

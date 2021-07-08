@@ -41,6 +41,15 @@ defmodule LinearWeb.EditIssueSyncLive do
   end
 
   @impl true
+  def handle_event("self_assign", _params, socket) do
+    %{viewer: viewer, changeset: changeset} = socket.assigns
+
+    changeset = Ecto.Changeset.put_change(changeset, :assignee_id, viewer["id"])
+
+    {:noreply, assign(socket, :changeset, changeset)}
+  end
+
+  @impl true
   def handle_event("submit", _params, socket) do
     case Repo.update(socket.assigns.changeset) do
       {:ok, _issue_sync} ->

@@ -7,80 +7,109 @@ defmodule Linear.IssueSyncService do
   alias Linear.Data.IssueSync
   alias Linear.LinearAPI
   alias Linear.GithubAPI
-  alias LinearWeb.Router.Helpers, as: Routes
+  alias Linear.Webhooks
 
-  def enable_issue_sync(account = %Account{id: id}, issue_sync = %IssueSync{account_id: id, enabled: false}) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:issue_sync, Data.change_issue_sync(issue_sync, %{enabled: true}))
-    |> Ecto.Multi.run(:linear_webhook, fn repo, multi -> enable_linear_webhook(account, repo, multi) end)
-    |> Ecto.Multi.run(:github_webhook, fn repo, multi -> enable_github_webhook(account, repo, multi) end)
-    |> Repo.transaction()
-    |> handle_result()
-  end
+  @doc """
+  Enables an issue_sync, handles webhook installation logic.
+  """
+  def enable_issue_sync(%IssueSync{} = issue_sync) do
+    issue_sync = Repo.preload(issue_sync, [
+      :account,
+      :linear_internal_webhook,
+      :github_internal_webhook
+    ])
 
-  def disable_issue_sync(account = %Account{id: id}, issue_sync = %IssueSync{account_id: id, enabled: true}) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:issue_sync, Data.change_issue_sync(issue_sync, %{enabled: false}))
-    # |> Ecto.Multi.run(:linear_webhook, fn repo, multi -> disable_linear_webhook(account, repo, multi) end)
-    |> Ecto.Multi.run(:github_webhook, fn repo, multi -> disable_github_webhook(account, repo, multi) end)
-    |> Repo.transaction()
-    |> handle_result()
-  end
-
-  def enable_linear_webhook(account, repo, multi) do
-    result = LinearAPI.create_webhook LinearAPI.Session.new(account),
-      url: Routes.linear_webhook_url(LinearWeb.Endpoint, :handle),
-      teamId: multi.issue_sync.team_id
-  
-    case result do
-      {:ok, %{"data" => %{"webhookCreate" => %{"success" => true, "webhook" => %{"id" => webhook_id, "enabled" => true}}}}} ->
-        multi.issue_sync
-        |> Data.change_issue_sync(%{linear_webhook_id: webhook_id})
-        |> repo.update()
-  
-      error ->
-        Logger.error("Failed to enable Linear webhook, #{inspect error}")
-        {:error, :linear_webhook_enable_failure}
+    Repo.transaction fn ->
+      with :ok <- disable_issue_sync_legacy(issue_sync.account, issue_sync),
+           {:ok, linear_webhook} <- Webhooks.create_webhook(:linear, issue_sync),
+           {:ok, github_webhook} <- Webhooks.create_webhook(:github, issue_sync),
+           {:ok, issue_sync} <- Data.enable_issue_sync(issue_sync, linear_webhook, github_webhook) do
+        issue_sync
+      else
+        {:error, reason} ->
+          Repo.rollback(reason)
+      end
     end
   end
 
-  def disable_linear_webhook(account, repo, multi) do
+  @doc """
+  Disables an issue_sync, handles webhook uninstallation logic.
+  """
+  def disable_issue_sync(%IssueSync{} = issue_sync) do
+    issue_sync = Repo.preload(issue_sync, [
+      :account,
+      :linear_internal_webhook,
+      :github_internal_webhook
+    ])
+
+    Repo.transaction fn ->
+      with :ok <- disable_issue_sync_legacy(issue_sync.account, issue_sync),
+           %{linear_internal_webhook: linear_internal_webhook} <- issue_sync,
+           %{github_internal_webhook: github_internal_webhook} <- issue_sync,
+           {:ok, issue_sync} <- Data.disable_issue_sync(issue_sync),
+           {:ok, _linear_webhook} <- Webhooks.delete_webhook(linear_internal_webhook, issue_sync),
+           {:ok, _github_webhook} <- Webhooks.delete_webhook(github_internal_webhook, issue_sync) do
+        issue_sync
+      else
+        {:error, reason} ->
+          Repo.rollback(reason)
+      end
+    end
+  end
+
+  # Legacy webhook handling functions, webhooks are now fully handled in
+  # the Linear.Webhooks context.
+
+  defp disable_issue_sync_legacy(account = %Account{id: id}, issue_sync = %IssueSync{account_id: id}) do
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update(:issue_sync, Data.change_issue_sync(issue_sync, %{enabled: false}))
+
+    multi =
+      if issue_sync.linear_webhook_id != nil do
+        multi
+        |> Ecto.Multi.run(:linear_webhook, fn repo, multi -> disable_linear_webhook(account, repo, multi) end)
+      else
+        multi
+      end
+
+    multi =
+      if issue_sync.github_webhook_id != nil do
+        multi
+        |> Ecto.Multi.run(:github_webhook, fn repo, multi -> disable_github_webhook(account, repo, multi) end)
+      else
+        multi
+      end
+
+    multi
+    |> Repo.transaction()
+    |> handle_result()
+  end
+
+  defp disable_linear_webhook(account, repo, multi) do
     result = LinearAPI.delete_webhook LinearAPI.Session.new(account),
       id: multi.issue_sync.linear_webhook_id
-  
+
+    do_disable = fn ->
+      multi.issue_sync
+      |> Data.change_issue_sync(%{linear_webhook_id: nil})
+      |> repo.update()
+    end
+
     case result do
       {:ok, %{"data" => %{"webhookDelete" => %{"success" => true}}}} ->
-        multi.issue_sync
-        |> Data.change_issue_sync(%{linear_webhook_id: nil})
-        |> repo.update()
-  
+        do_disable.()
+
+      {:ok, %{"data" => nil, "errors" => [%{"message" => "Entity not found"}]}} ->
+        do_disable.()
+
       error ->
         Logger.error("Failed to disable Linear webhook, #{inspect error}")
         {:error, :linear_webhook_disable_failure}
     end
   end
 
-  def enable_github_webhook(account, repo, multi) do
-    client = GithubAPI.client(account)
-    repo_key = GithubAPI.to_repo_key!(multi.issue_sync)
-
-    result = GithubAPI.create_webhook client, repo_key,
-      url: Routes.github_webhook_url(LinearWeb.Endpoint, :handle),
-      secret: "secret"
-
-    case result do
-      {201, %{"active" => true, "id" => webhook_id}, _response} ->
-        multi.issue_sync
-        |> Data.change_issue_sync(%{github_webhook_id: webhook_id})
-        |> repo.update()
-
-      {_status, error, _response} ->
-        Logger.error("Failed to enable Github webhook, #{inspect error}")
-        {:error, :github_webhook_enable_failure}
-    end
-  end
-
-  def disable_github_webhook(account, repo, multi) do
+  defp disable_github_webhook(account, repo, multi) do
     client = GithubAPI.client(account)
     repo_key = GithubAPI.to_repo_key!(multi.issue_sync)
 
@@ -106,6 +135,6 @@ defmodule Linear.IssueSyncService do
     end
   end
 
-  def handle_result({:ok, _multi}), do: :ok
-  def handle_result({:error, _step, reason, _multi}), do: {:error, reason}
+  defp handle_result({:ok, _multi}), do: :ok
+  defp handle_result({:error, _step, reason, _multi}), do: {:error, reason}
 end
