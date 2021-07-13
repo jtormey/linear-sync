@@ -85,19 +85,22 @@ defmodule Linear.Synchronize do
           session = LinearAPI.Session.new(issue_sync.account)
 
           Enum.each issue_ids, fn issue_id ->
-            with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id),
-                 nil <- Data.get_ln_issue(attrs["id"]) do
-              attrs =
-                attrs
-                |> Map.put("github_issue_id", gh_issue.id)
-                |> Map.put("github_issue_number", gh_issue.number)
+            with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id) do
+              {:ok, ln_issue} =
+                if ln_issue = Data.get_ln_issue(attrs["id"]) do
+                  {:ok, ln_issue}
+                else
+                  attrs =
+                    attrs
+                    |> Map.put("github_issue_id", gh_issue.id)
+                    |> Map.put("github_issue_number", gh_issue.number)
 
-              {:ok, ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+                  Data.create_ln_issue(issue_sync, attrs)
+                end
 
               Logger.info("Linked Github issue #{inspect gh_issue} with existing Linear issue #{inspect ln_issue}")
 
-              LinearQuery.create_issue_comment(session, ln_issue,
-                body: ContentWriter.linear_comment_issue_linked_body(gh_issue))
+              LinearQuery.create_issue_comment(session, ln_issue, body: ContentWriter.linear_comment_issue_linked_body(gh_issue))
             end
           end
         end
