@@ -80,8 +80,26 @@ defmodule Linear.Synchronize do
           create_ln_issue_from_gh_issue(issue_sync, gh_repo, gh_issue)
         end
 
-      _issue_ids ->
-        :noop
+      issue_ids ->
+        Enum.each Data.list_issue_syncs_by_repo_id(gh_repo.id), fn issue_sync ->
+          session = LinearAPI.Session.new(issue_sync.account)
+
+          Enum.each issue_ids, fn issue_id ->
+            with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id) do
+              attrs =
+                attrs
+                |> Map.put("github_issue_id", gh_issue.id)
+                |> Map.put("github_issue_number", gh_issue.number)
+
+              {:ok, ln_issue} = Data.create_ln_issue(issue_sync, attrs)
+
+              Logger.info("Linked Github issue #{inspect gh_issue} with existing Linear issue #{inspect ln_issue}")
+
+              LinearQuery.create_issue_comment(session, ln_issue,
+                body: ContentWriter.linear_comment_issue_linked_body(gh_issue))
+            end
+          end
+        end
     end
   end
 
@@ -335,6 +353,6 @@ defmodule Linear.Synchronize do
 
   """
   def parse_linear_issue_ids(title) when is_binary(title) do
-    Regex.scan(~r/\[[A-Z0-9]+-\d+\]/, title) |> List.flatten()
+    Regex.scan(~r/\[([A-Z0-9]+-\d+)\]/, title) |> Enum.map(&List.last/1)
   end
 end

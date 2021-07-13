@@ -73,6 +73,8 @@ defmodule Linear.LinearAPI do
     query($id: String!) {
       issue(id: $id) {
         id
+        number
+        url
         title
         description
         labels {

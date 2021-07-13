@@ -6,6 +6,22 @@ defmodule Linear.LinearQuery do
   alias Linear.Data.LnIssue
 
   @doc """
+  Gets an issue in Linear by ID, i.e. "ABC-12"
+  """
+  def get_issue_by_id(%Session{} = session, ln_issue_id) do
+    result = LinearAPI.issue(session, ln_issue_id)
+
+    case result do
+      {:ok, %{"data" => %{"issue" => issue}}} ->
+        {:ok, issue}
+
+      error ->
+        Logger.error("Error getting Linear issue by ID, #{inspect error}")
+        :error
+    end
+  end
+
+  @doc """
   Creates an issue in Linear
   """
   def create_issue(%Session{} = session, args) do

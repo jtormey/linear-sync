@@ -35,7 +35,18 @@ defmodule Linear.Synchronize.ContentWriter do
     """
     #{gh_comment.body}
     ___
-    [Comment](#{gh_comment.html_url})  #{github_author_signature(gh_comment.user)}
+    [Comment](#{gh_comment.html_url}) #{github_author_signature(gh_comment.user)}
+
+    *via LinearSync*
+    """
+  end
+
+  @doc """
+  Returns the Linear comment body for a successfully linked Github issue.
+  """
+  def linear_comment_issue_linked_body(%Gh.Issue{} = gh_issue) do
+    """
+    Linked to [##{gh_issue.number}](#{gh_issue.html_url}) #{github_author_signature(gh_issue.user)}
 
     *via LinearSync*
     """
