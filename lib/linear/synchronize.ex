@@ -174,8 +174,7 @@ defmodule Linear.Synchronize do
 
     with {:ok, ln_labels} <- LinearQuery.list_labels(session) do
       Enum.find ln_labels, fn ln_label ->
-        match? = String.downcase(ln_label["name"]) == gh_label.name
-        match? && ln_label
+        labels_match?(ln_label["name"], gh_label.name) && ln_label
       end
     else
       :error ->
@@ -291,13 +290,13 @@ defmodule Linear.Synchronize do
       removed_ln_labels = prev_label_ids -- current_label_ids
 
       to_add = Enum.filter repo_labels, fn repo_label ->
-        if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
+        if ln_label = Enum.find(ln_labels, &labels_match?(&1["name"], repo_label["name"])) do
           ln_label["id"] in added_ln_labels and repo_label["id"] not in issue_label_ids
         end
       end
 
       to_remove = Enum.filter repo_labels, fn repo_label ->
-        if ln_label = Enum.find(ln_labels, &String.downcase(&1["name"]) == repo_label["name"]) do
+        if ln_label = Enum.find(ln_labels, &labels_match?(&1["name"], repo_label["name"])) do
           ln_label["id"] in removed_ln_labels and repo_label["id"] in issue_label_ids
         end
       end
@@ -341,12 +340,12 @@ defmodule Linear.Synchronize do
   end
 
   defp ln_issue_private?(%{"data" => issue_data}) do
-    issue_data["labels"] != nil and Enum.any?(issue_data["labels"], &String.downcase(&1["name"]) == "private")
+    issue_data["labels"] != nil and Enum.any?(issue_data["labels"], &labels_match?(&1["name"], "private"))
   end
 
   defp ln_issue_private?(session, ln_issue) do
     {:ok, labels} = LinearQuery.list_issue_labels(session, ln_issue)
-    Enum.any?(labels, &String.downcase(&1["name"]) == "private")
+    Enum.any?(labels, &labels_match?(&1["name"], "private"))
   end
 
   @doc """
@@ -360,5 +359,12 @@ defmodule Linear.Synchronize do
   """
   def parse_linear_issue_ids(title) when is_binary(title) do
     Regex.scan(~r/\[([A-Z0-9]+-\d+)\]/, title) |> Enum.map(&List.last/1)
+  end
+
+  @doc """
+  Checks if two labels are equal, uses a case-insensitive comparison.
+  """
+  def labels_match?(label_a, label_b) do
+    String.downcase(label_a) == String.downcase(label_b)
   end
 end
