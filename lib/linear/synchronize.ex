@@ -85,7 +85,8 @@ defmodule Linear.Synchronize do
           session = LinearAPI.Session.new(issue_sync.account)
 
           Enum.each issue_ids, fn issue_id ->
-            with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id) do
+            with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id),
+                 nil <- Data.get_ln_issue(attrs["id"]) do
               attrs =
                 attrs
                 |> Map.put("github_issue_id", gh_issue.id)
@@ -248,7 +249,7 @@ defmodule Linear.Synchronize do
       params["data"]
       |> Map.put("url", params["url"])
 
-    if not ContentWriter.via_linear_sync?(params["description"]) do
+    if params["description"] == nil or not ContentWriter.via_linear_sync?(params["description"]) do
       {201, gh_issue, _response} =
         GithubAPI.create_issue(client, repo_key, %{
           "title" => format_issue_key(attrs) <> " " <> attrs["title"],
