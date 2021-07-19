@@ -79,13 +79,39 @@
         <% end %>
       </div>
 
-      <div class="border-b border-dark-300 mx-4 mb-6"></div>
+      <div class="px-4 py-4 flex items-center">
+        <h3 class="text-dark-500 text-sm mr-4">
+          Sync options
+        </h3>
+        <div class="border-b border-dark-300 mt-1 flex-grow"></div>
+      </div>
 
-      <div class="flex items-center">
+      <div class="flex items-center mb-3">
         <%= label f, :close_on_open, class: "px-4" do %>
           <%= checkbox f, :close_on_open %>
           <span class="text-dark-600 text-sm ml-2">
-            Automatically close GitHub issues with a link to the newly created Linear issue
+            <span>Auto-close:</span>
+            <span class="text-dark-500">Automatically close GitHub issues with a link to the newly created Linear issue</span>
+          </span>
+        <% end %>
+      </div>
+
+      <div class="flex items-center mb-3">
+        <%= label f, :sync_linear_to_github, class: "px-4" do %>
+          <%= checkbox f, :sync_linear_to_github %>
+          <span class="text-dark-600 text-sm ml-2">
+            <span>Two-way sync:</span>
+            <span class="text-dark-500">Sync all Linear issues, comments, and labels to GitHub</span>
+          </span>
+        <% end %>
+      </div>
+
+      <div class="flex items-center mb-3">
+        <%= label f, :sync_github_issue_titles, class: "px-4" do %>
+          <%= checkbox f, :sync_github_issue_titles %>
+          <span class="text-dark-600 text-sm ml-2">
+            <span>Title sync:</span>
+            <span class="text-dark-500">If syncing Linear to GitHub, sync GitHub titles with Linear issue IDs</span>
           </span>
         <% end %>
       </div>

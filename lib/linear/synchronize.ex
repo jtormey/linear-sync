@@ -45,14 +45,16 @@ defmodule Linear.Synchronize do
   def handle_incoming(:linear, %{"action" => "create", "type" => "Issue"} = params) do
     if not ln_issue_private?(params) do
       Enum.each Data.list_issue_syncs_by_team_id(params["data"]["teamId"]), fn issue_sync ->
-        handle_linear_issue_created(issue_sync, params)
+        if issue_sync.sync_linear_to_github do
+          handle_linear_issue_created(issue_sync, params)
+        end
       end
     end
   end
 
   def handle_incoming(:linear, %{"action" => "update", "type" => "Issue"} = params) do
     if ln_issue = Data.get_ln_issue(params["data"]["id"]) do
-      if ln_issue.github_issue_number != nil do
+      if ln_issue.github_issue_number != nil and ln_issue.issue_sync.sync_linear_to_github do
         handle_linear_issue_updated(ln_issue, params)
       end
     end
@@ -60,7 +62,7 @@ defmodule Linear.Synchronize do
 
   def handle_incoming(:linear, %{"action" => "create", "type" => "Comment"} = params) do
     if ln_issue = Data.get_ln_issue(params["data"]["issue"]["id"]) do
-      if ln_issue.github_issue_number != nil do
+      if ln_issue.github_issue_number != nil and ln_issue.issue_sync.sync_linear_to_github do
         handle_linear_comment_created(ln_issue, params)
       end
     end
@@ -84,7 +86,7 @@ defmodule Linear.Synchronize do
         Enum.each Data.list_issue_syncs_by_repo_id(gh_repo.id), fn issue_sync ->
           session = LinearAPI.Session.new(issue_sync.account)
 
-          Enum.each issue_ids, fn issue_id ->
+          if issue_sync.sync_github_issue_titles, do: Enum.each(issue_ids, fn issue_id ->
             with {:ok, attrs} <- LinearQuery.get_issue_by_id(session, issue_id) do
               {:ok, ln_issue} =
                 if ln_issue = Data.get_ln_issue(attrs["id"]) do
@@ -102,7 +104,7 @@ defmodule Linear.Synchronize do
 
               LinearQuery.create_issue_comment(session, ln_issue, body: ContentWriter.linear_comment_issue_linked_body(gh_issue))
             end
-          end
+          end)
         end
     end
   end
@@ -224,9 +226,11 @@ defmodule Linear.Synchronize do
       client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
       repo_key = GithubAPI.to_repo_key!(issue_sync)
 
-      GithubAPI.update_issue(client, repo_key, gh_issue.number, %{
-        "title" => format_issue_key(attrs) <> " " <> gh_issue.title
-      })
+      if issue_sync.sync_github_issue_titles do
+        GithubAPI.update_issue(client, repo_key, gh_issue.number, %{
+          "title" => format_issue_key(attrs) <> " " <> gh_issue.title
+        })
+      end
 
       if issue_sync.close_on_open do
         comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
@@ -252,9 +256,16 @@ defmodule Linear.Synchronize do
       |> Map.put("url", params["url"])
 
     if params["description"] == nil or not ContentWriter.via_linear_sync?(params["description"]) do
+      gh_issue_title =
+        if issue_sync.sync_github_issue_titles do
+          format_issue_key(attrs) <> " " <> attrs["title"]
+        else
+          attrs["title"]
+        end
+
       {201, gh_issue, _response} =
         GithubAPI.create_issue(client, repo_key, %{
-          "title" => format_issue_key(attrs) <> " " <> attrs["title"],
+          "title" => gh_issue_title,
           "body" => ContentWriter.github_issue_body(attrs)
         })
 

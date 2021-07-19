@@ -105,7 +105,7 @@ defmodule Linear.Data do
   @doc """
   Gets a single ln_issue.
   """
-  def get_ln_issue(id), do: Repo.get(LnIssue, id)
+  def get_ln_issue(id), do: Repo.get(LnIssue, id) |> Repo.preload(:issue_sync)
 
   def list_ln_issues_by_github_issue_id(github_issue_id) do
     Repo.all from l in LnIssue,
