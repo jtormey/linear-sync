@@ -1,9 +1,13 @@
 defmodule LinearWeb.NewIssueSyncLive do
   use LinearWeb, :live_view
 
+  require Logger
+
   alias Linear.Repo
   alias Linear.Accounts
+  alias Linear.Data
   alias Linear.Data.IssueSync
+  alias Linear.IssueSyncService
   alias Linear.LinearAPI
 
   @impl true
@@ -33,13 +37,9 @@ defmodule LinearWeb.NewIssueSyncLive do
 
   @impl true
   def handle_event("validate", %{"issue_sync" => attrs}, socket) do
-    attrs = attrs
-    |> put_source_name(socket)
-    |> put_dest_name(socket)
-
     socket = socket
     |> load_team(attrs["team_id"])
-    |> assign(:changeset, IssueSync.assoc_changeset(%IssueSync{}, socket.assigns.account, attrs))
+    |> assign(:changeset, build_changeset(socket, attrs) |> Map.put(:action, :insert))
 
     {:noreply, socket}
   end
@@ -54,8 +54,29 @@ defmodule LinearWeb.NewIssueSyncLive do
   end
 
   @impl true
-  def handle_event("submit", _params, socket) do
-    case Repo.insert(socket.assigns.changeset) do
+  def handle_event("delete_existing", _params, socket) do
+    %{account: account, changeset: changeset} = socket.assigns
+
+    repo_id = Ecto.Changeset.fetch_change!(changeset, :repo_id)
+    team_id = Ecto.Changeset.fetch_change!(changeset, :team_id)
+
+    with {:ok, %{enabled: true} = issue_sync} <- {:ok, Data.get_issue_sync_by!(repo_id: repo_id, team_id: team_id)},
+         {:error, reason} <- IssueSyncService.disable_issue_sync(issue_sync) do
+      Logger.error("Failed to delete existing issue sync: #{inspect reason}")
+    else
+      {:ok, issue_sync} ->
+        Data.delete_issue_sync(issue_sync)
+    end
+
+    changeset =
+      IssueSync.assoc_changeset(%IssueSync{}, account, changeset.changes)
+
+    {:noreply, assign(socket, :changeset, changeset)}
+  end
+
+  @impl true
+  def handle_event("submit", %{"issue_sync" => attrs}, socket) do
+    case Repo.insert(build_changeset(socket, attrs)) do
       {:ok, _issue_sync} ->
         {:noreply, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}
 
@@ -90,6 +111,15 @@ defmodule LinearWeb.NewIssueSyncLive do
     [value: id, key: "#{owner["login"]}/#{name}", owner: owner["login"], name: name]
   end
 
+  def build_changeset(socket, attrs) do
+    attrs =
+      attrs
+      |> put_source_name(socket)
+      |> put_dest_name(socket)
+
+    IssueSync.assoc_changeset(%IssueSync{}, socket.assigns.account, attrs)
+  end
+
   def put_source_name(attrs, socket) do
     case attrs do
       %{"team_id" => team_id} ->
@@ -113,6 +143,16 @@ defmodule LinearWeb.NewIssueSyncLive do
 
       _otherwise ->
         attrs
+    end
+  end
+
+  def team_repo_constraint_error?(changeset) do
+    case changeset.errors[:repo_id] do
+      {_error, details} ->
+        details[:validation] == :unsafe_unique
+
+      _otherwise ->
+        false
     end
   end
 end

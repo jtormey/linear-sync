@@ -40,6 +40,7 @@ defmodule Linear.Data.IssueSync do
     issue_sync
     |> cast(attrs, [:source_name, :dest_name, :enabled, :repo_id, :repo_owner, :repo_name, :team_id, :open_state_id, :close_state_id, :label_id, :assignee_id, :linear_webhook_id, :github_webhook_id, :close_on_open])
     |> validate_required([:source_name, :dest_name, :enabled, :repo_id, :repo_owner, :repo_name, :team_id])
+    |> unsafe_validate_unique([:repo_id, :team_id], Linear.Repo, message: "there is already an issue sync for this team repo combination")
     |> unique_constraint(:repo_id, name: :issue_syncs_team_id_repo_id_index, message: "there is already an issue sync for this team repo combination")
   end
 

@@ -28,6 +28,8 @@ defmodule Linear.Data do
   """
   def get_issue_sync!(id), do: Repo.get!(IssueSync, id) |> Repo.preload([:account])
 
+  def get_issue_sync_by!(opts), do: Repo.get_by!(IssueSync, opts) |> Repo.preload([:account])
+
   def list_issue_syncs_by_repo_id(repo_id) do
     Repo.all from i in IssueSync,
       join: a in assoc(i, :account),
