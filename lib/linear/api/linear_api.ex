@@ -5,6 +5,8 @@ defmodule Linear.LinearAPI do
 
   use HTTPoison.Base
 
+  @behaviour __MODULE__.Behaviour
+
   require Logger
 
   alias HTTPoison.Response
@@ -13,6 +15,7 @@ defmodule Linear.LinearAPI do
 
   @base_url "https://api.linear.app"
 
+  @impl __MODULE__.Behaviour
   def new_issue_sync_data(session = %Session{}, team_id) do
     query = %Query{
       operation: :team,
@@ -26,6 +29,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
+  @impl __MODULE__.Behaviour
   def viewer(session = %Session{}) do
     query = %Query{
       operation: :viewer,
@@ -34,6 +38,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
+  @impl __MODULE__.Behaviour
   def organization(session = %Session{}) do
     query = %Query{
       operation: :organization,
@@ -42,6 +47,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
+  @impl __MODULE__.Behaviour
   def teams(session = %Session{}) do
     query = %Query{
       operation: :teams,
@@ -50,6 +56,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.query(query)
   end
 
+  @impl __MODULE__.Behaviour
   def viewer_teams(session = %Session{}) do
     graphql session, """
     query {
@@ -68,6 +75,7 @@ defmodule Linear.LinearAPI do
     """
   end
 
+  @impl __MODULE__.Behaviour
   def issue(session = %Session{}, issue_id) when is_binary(issue_id) do
     query = """
     query($id: String!) {
@@ -90,6 +98,7 @@ defmodule Linear.LinearAPI do
       variables: [id: issue_id]
   end
 
+  @impl __MODULE__.Behaviour
   def create_issue(session = %Session{}, opts) do
     query = """
     mutation($teamId: String!, $title: String!, $description: String!, $stateId: String, $labelIds: [String!], $assigneeId: String) {
@@ -114,6 +123,7 @@ defmodule Linear.LinearAPI do
       variables: Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds, :assigneeId])
   end
 
+  @impl __MODULE__.Behaviour
   def create_comment(session = %Session{}, opts) do
     query = """
     mutation($issueId: String!, $body: String!) {
@@ -130,6 +140,7 @@ defmodule Linear.LinearAPI do
       variables: Keyword.take(opts, [:issueId, :body])
   end
 
+  @impl __MODULE__.Behaviour
   def update_issue(session = %Session{}, opts) do
     query = """
     mutation($issueId: String!, $title: String, $description: String, $stateId: String, $labelIds: [String!], $assigneeId: String) {
@@ -149,6 +160,7 @@ defmodule Linear.LinearAPI do
       variables: Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds, :assigneeId])
   end
 
+  @impl __MODULE__.Behaviour
   def create_webhook(session = %Session{}, opts) do
     resourceTypes = [resourceTypes: ["Comment","Issue"]]
     opts = Keyword.merge(opts, resourceTypes)
@@ -160,6 +172,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.mutation(query)
   end
 
+  @impl __MODULE__.Behaviour
   def get_webhooks(session = %Session{}) do
     graphql session, """
       query {
@@ -181,6 +194,7 @@ defmodule Linear.LinearAPI do
       """
   end
 
+  @impl __MODULE__.Behaviour
   def delete_webhook(session = %Session{}, opts) do
     query = %Query{
       operation: :webhookDelete,
@@ -190,6 +204,7 @@ defmodule Linear.LinearAPI do
     graphql session, GraphqlBuilder.mutation(query)
   end
 
+  @impl __MODULE__.Behaviour
   def list_issue_labels(session = %Session{}) do
     graphql session, """
     query {

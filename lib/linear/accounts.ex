@@ -28,8 +28,10 @@ defmodule Linear.Accounts do
   def find_or_create_account(api_key) when is_binary(api_key) do
     session = LinearAPI.Session.new(api_key)
 
+    linear_api = Application.get_env(:linear, :linear_api, LinearAPI)
+
     with nil <- Repo.get_by(Account, api_key: api_key),
-         {:ok, %{"data" => %{"organization" => %{"id" => org_id}}}} <- LinearAPI.organization(session) do
+         {:ok, %{"data" => %{"organization" => %{"id" => org_id}}}} <- linear_api.organization(session) do
       if account = Repo.get_by(Account, organization_id: org_id) do
         account =
           account
