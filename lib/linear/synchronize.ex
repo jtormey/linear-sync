@@ -228,7 +228,7 @@ defmodule Linear.Synchronize do
 
       if issue_sync.sync_github_issue_titles do
         GithubAPI.update_issue(client, repo_key, gh_issue.number, %{
-          "title" => format_issue_key(attrs) <> " " <> gh_issue.title
+          "title" => format_gh_issue_title(gh_issue.title, format_issue_key(attrs))
         })
       end
 
@@ -245,6 +245,10 @@ defmodule Linear.Synchronize do
     "[#{team_key}-#{issue_number}]"
   end
 
+  defp format_gh_issue_title(gh_issue_title, ln_issue_key) do
+    gh_issue_title <> " " <> ln_issue_key
+  end
+
   @doc """
   """
   def handle_linear_issue_created(issue_sync, params) do
@@ -258,7 +262,7 @@ defmodule Linear.Synchronize do
     if params["description"] == nil or not ContentWriter.via_linear_sync?(params["description"]) do
       gh_issue_title =
         if issue_sync.sync_github_issue_titles do
-          format_issue_key(attrs) <> " " <> attrs["title"]
+          format_gh_issue_title(attrs["title"], format_issue_key(attrs))
         else
           attrs["title"]
         end
