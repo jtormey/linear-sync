@@ -11,6 +11,8 @@ defmodule Linear.Synchronize do
   alias Linear.GithubAPI.GithubData, as: Gh
   alias Linear.Synchronize.ContentWriter
 
+  @github_api Application.get_env(:linear, :github_api, GithubAPI)
+
   @doc """
   Given a scope, handles an incoming webhook message.
   """
@@ -227,7 +229,7 @@ defmodule Linear.Synchronize do
       repo_key = GithubAPI.to_repo_key!(issue_sync)
 
       if issue_sync.sync_github_issue_titles do
-        GithubAPI.update_issue(client, repo_key, gh_issue.number, %{
+        @github_api.update_issue(client, repo_key, gh_issue.number, %{
           "title" => format_gh_issue_title(gh_issue.title, format_issue_key(attrs))
         })
       end
@@ -235,8 +237,8 @@ defmodule Linear.Synchronize do
       if issue_sync.close_on_open do
         comment = ContentWriter.github_issue_moved_comment_body(ln_issue)
 
-        GithubAPI.create_issue_comment(client, repo_key, gh_issue.number, comment)
-        GithubAPI.close_issue(client, repo_key, gh_issue.number)
+        @github_api.create_issue_comment(client, repo_key, gh_issue.number, comment)
+        @github_api.close_issue(client, repo_key, gh_issue.number)
       end
     end
   end
@@ -268,7 +270,7 @@ defmodule Linear.Synchronize do
         end
 
       {201, gh_issue, _response} =
-        GithubAPI.create_issue(client, repo_key, %{
+        @github_api.create_issue(client, repo_key, %{
           "title" => gh_issue_title,
           "body" => ContentWriter.github_issue_body(attrs)
         })
@@ -297,8 +299,8 @@ defmodule Linear.Synchronize do
 
     with %{"data" => %{"labelIds" => current_label_ids}, "updatedFrom" => %{"labelIds" => prev_label_ids}} <- params,
          {:ok, ln_labels} <- LinearQuery.list_labels(session),
-         {200, repo_labels, _response} <- GithubAPI.list_repository_labels(client, repo_key),
-         {200, issue_labels, _response} <- GithubAPI.list_issue_labels(client, repo_key, ln_issue.github_issue_number) do
+         {200, repo_labels, _response} <- @github_api.list_repository_labels(client, repo_key),
+         {200, issue_labels, _response} <- @github_api.list_issue_labels(client, repo_key, ln_issue.github_issue_number) do
       issue_label_ids = Enum.map(issue_labels, & &1["id"])
 
       added_ln_labels = current_label_ids -- prev_label_ids
@@ -320,17 +322,17 @@ defmodule Linear.Synchronize do
       Logger.info("Removing Github labels: #{inspect to_remove}")
 
       if to_add != [] do
-        GithubAPI.add_issue_labels(client, repo_key, ln_issue.github_issue_number, Enum.map(to_add, & &1["name"]))
+        @github_api.add_issue_labels(client, repo_key, ln_issue.github_issue_number, Enum.map(to_add, & &1["name"]))
       end
 
-      Enum.each(to_remove, &GithubAPI.remove_issue_labels(client, repo_key, ln_issue.github_issue_number, &1["name"]))
+      Enum.each(to_remove, &@github_api.remove_issue_labels(client, repo_key, ln_issue.github_issue_number, &1["name"]))
     end
 
     with %{"data" => %{"stateId" => current_state_id} = data, "updatedFrom" => %{"stateId" => _prev_state_id}} <- params do
       canceled? = get_in(data, ["state", "type"]) == "canceled"
 
       if current_state_id == issue_sync.close_state_id or canceled? do
-        GithubAPI.close_issue(client, repo_key, ln_issue.github_issue_number)
+        @github_api.close_issue(client, repo_key, ln_issue.github_issue_number)
       end
     end
   end
@@ -349,7 +351,7 @@ defmodule Linear.Synchronize do
         client = GithubAPI.client(Accounts.get_account!(issue_sync.account_id))
 
         comment = ContentWriter.github_issue_comment_body(ln_issue, comment_data["body"])
-        GithubAPI.create_issue_comment(client, repo_key, ln_issue.github_issue_number, comment)
+        @github_api.create_issue_comment(client, repo_key, ln_issue.github_issue_number, comment)
       end
     end
   end

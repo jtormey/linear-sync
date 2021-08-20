@@ -5,11 +5,13 @@ defmodule Linear.LinearQuery do
   alias Linear.LinearAPI.Session
   alias Linear.Data.LnIssue
 
+  @linear_api Application.get_env(:linear, :linear_api, LinearAPI)
+
   @doc """
   Gets an issue in Linear by ID, i.e. "ABC-12"
   """
   def get_issue_by_id(%Session{} = session, ln_issue_id) do
-    result = LinearAPI.issue(session, ln_issue_id)
+    result = @linear_api.issue(session, ln_issue_id)
 
     case result do
       {:ok, %{"data" => %{"issue" => issue}}} ->
@@ -25,7 +27,7 @@ defmodule Linear.LinearQuery do
   Creates an issue in Linear
   """
   def create_issue(%Session{} = session, args) do
-    result = LinearAPI.create_issue(session, args)
+    result = @linear_api.create_issue(session, args)
 
     case result do
       {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => attrs}}}} ->
@@ -45,7 +47,7 @@ defmodule Linear.LinearQuery do
   def update_issue(%Session{} = session, %LnIssue{} = ln_issue, args) do
     args = Keyword.merge(args, issueId: ln_issue.id)
 
-    result = LinearAPI.update_issue(session, args)
+    result = @linear_api.update_issue(session, args)
 
     case result do
       {:ok, %{"data" => %{"issueUpdate" => %{"success" => true}}}} ->
@@ -65,7 +67,7 @@ defmodule Linear.LinearQuery do
   def create_issue_comment(%Session{} = session, %LnIssue{} = ln_issue, args) do
     args = Keyword.merge(args, issueId: ln_issue.id)
 
-    result = LinearAPI.create_comment(session, args)
+    result = @linear_api.create_comment(session, args)
 
     case result do
       {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => attrs}}}} ->
@@ -81,7 +83,7 @@ defmodule Linear.LinearQuery do
   Lists all labels currently applied to an issue in Linear.
   """
   def list_issue_labels(%Session{} = session, %LnIssue{} = ln_issue) do
-    result = LinearAPI.issue(session, ln_issue.id)
+    result = @linear_api.issue(session, ln_issue.id)
 
     case result do
       {:ok, %{"data" => %{"issue" => issue}}} ->
@@ -97,7 +99,7 @@ defmodule Linear.LinearQuery do
   Lists all labels in Linear.
   """
   def list_labels(%Session{} = session) do
-    result = LinearAPI.list_issue_labels(session)
+    result = @linear_api.list_issue_labels(session)
 
     case result do
       {:ok, %{"data" => %{"issueLabels" => %{"nodes" => issue_labels}}}} ->

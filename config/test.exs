@@ -20,6 +20,7 @@ config :linear, LinearWeb.Endpoint,
 
 
 config :linear, :linear_api, Linear.LinearAPIMock
+config :linear, :github_api, Linear.GithubAPIMock
 
 # Print only warnings and errors during test
 config :logger, level: :warn
