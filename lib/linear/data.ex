@@ -96,6 +96,15 @@ defmodule Linear.Data do
   end
 
   @doc """
+  Deletes all issue_syncs for an account.
+  """
+  def delete_disabled_issue_syncs_for_account(%Account{} = account) do
+    Repo.delete_all from i in IssueSync,
+      where: [account_id: ^account.id, enabled: false]
+    :ok
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking issue_sync changes.
   """
   def change_issue_sync(%IssueSync{} = issue_sync, attrs \\ %{}) do

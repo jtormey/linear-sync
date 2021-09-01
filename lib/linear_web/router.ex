@@ -23,6 +23,7 @@ defmodule LinearWeb.Router do
 
     resources "/", SessionController, only: [:index]
     resources "/", SessionController, only: [:create, :delete], singleton: true
+    resources "/account", AccountController, only: [:delete], singleton: true
 
     live "/link/github", LinkGithubLive, :index
 

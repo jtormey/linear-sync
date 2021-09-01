@@ -63,4 +63,12 @@ defmodule LinearWeb.DashboardLive do
         {:noreply, put_flash(socket, :error, "Cannot delete an active issue sync")}
     end
   end
+
+  def confirm_delete_message() do
+    """
+    Are you sure you want to delete your account?\n
+    All webhooks will be disabled and all data will be deleted permanently.\n
+    This action cannot be reversed!
+    """
+  end
 end

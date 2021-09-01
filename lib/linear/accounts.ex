@@ -8,6 +8,8 @@ defmodule Linear.Accounts do
   alias Linear.Repo
   alias Linear.LinearAPI
   alias Linear.Accounts.Account
+  alias Linear.Data
+  alias Linear.IssueSyncService
 
   @doc """
   Gets a single account.
@@ -64,7 +66,10 @@ defmodule Linear.Accounts do
   Deletes an account.
   """
   def delete_account(%Account{} = account) do
-    Repo.delete(account)
+    with :ok <- IssueSyncService.disable_issue_syncs_for_account(account),
+         :ok <- Data.delete_disabled_issue_syncs_for_account(account) do
+      Repo.delete(account)
+    end
   end
 
   @doc """

@@ -47,8 +47,10 @@
       <% end %>
     </div>
 
-    <div class="">
-      <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete, class: "text-dark-500 text-sm" %>
+    <div class="text-dark-500 text-sm">
+      <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>
+      <span class="mx-2">|</span>
+      <%= link "Delete account", to: Routes.account_path(@socket, :delete), method: :delete, data: [confirm: confirm_delete_message()] %>
     </div>
   </div>
 </div>

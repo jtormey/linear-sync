@@ -2,6 +2,8 @@ defmodule Linear.Accounts.Account do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Linear.Data.IssueSync
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
@@ -10,6 +12,8 @@ defmodule Linear.Accounts.Account do
     field :organization_id, Ecto.UUID
     field :github_token, :string
     field :github_link_state, :string
+
+    has_many :issue_syncs, IssueSync
 
     timestamps()
   end

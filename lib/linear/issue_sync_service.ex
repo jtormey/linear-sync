@@ -33,6 +33,29 @@ defmodule Linear.IssueSyncService do
   end
 
   @doc """
+  Disables all issue syncs for an account. Returns :ok if all were disabled
+  and {:error, reason} in case that one fails.
+
+  Note that this operation is not atomic.
+  """
+  def disable_issue_syncs_for_account(%Account{} = account) do
+    account = Repo.preload(account, :issue_syncs)
+
+    Enum.reduce_while(account.issue_syncs, :ok, fn issue_sync, :ok ->
+      with %IssueSync{enabled: true} <- issue_sync,
+           {:ok, _issue_sync} <- disable_issue_sync(issue_sync) do
+        {:cont, :ok}
+      else
+        %IssueSync{enabled: false} ->
+          {:cont, :ok}
+
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  @doc """
   Disables an issue_sync, handles webhook uninstallation logic.
   """
   def disable_issue_sync(%IssueSync{} = issue_sync) do
