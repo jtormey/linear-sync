@@ -102,7 +102,9 @@ defmodule Linear.Synchronize.ContentWriter do
   @doc """
   Returns true if the text contains the LinearSync comment signature.
   """
-  def via_linear_sync?(body) do
+  def via_linear_sync?(body) when is_binary(body) do
     String.contains?(body, "*via LinearSync*")
   end
+
+  def via_linear_sync?(nil), do: false
 end

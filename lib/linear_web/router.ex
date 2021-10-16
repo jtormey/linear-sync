@@ -17,9 +17,16 @@ defmodule LinearWeb.Router do
   scope "/", LinearWeb do
     pipe_through :browser
 
+    # Legacy OAuth Apps
     get "/auth/github", AuthGithubController, :auth
     get "/auth/github/callback", AuthGithubController, :callback
     get "/auth/github/done", AuthGithubController, :done
+    post "/auth/github/relink", AuthGithubController, :relink
+
+    # GitHub Apps
+    get "/auth/github/app/pre-auth", AuthGithubAppController, :pre_auth
+    get "/auth/github/app", AuthGithubAppController, :auth
+    get "/auth/github/app/callback", AuthGithubAppController, :callback
 
     resources "/", SessionController, only: [:index]
     resources "/", SessionController, only: [:create, :delete], singleton: true

@@ -19,6 +19,11 @@ defmodule Linear.Accounts do
   def get_account!(id), do: Repo.get!(Account, id)
 
   @doc """
+  Gets a single account by a set of options.
+  """
+  def get_account_by(opts), do: Repo.get_by(Account, opts)
+
+  @doc """
   Finds an account by api_key.
 
   If the account is not found, tries to load the organization from the
@@ -59,7 +64,17 @@ defmodule Linear.Accounts do
   """
   def update_account_github_link(%Account{} = account, attrs) do
     account
-    |> Ecto.Changeset.cast(attrs, [:github_token, :github_link_state])
+    |> Ecto.Changeset.cast(attrs, [:github_token, :github_link_state, :github_installation_id])
+    |> Repo.update()
+    |> broadcast(:github_link)
+  end
+
+  @doc """
+  Deletes the github connection details for an account.
+  """
+  def delete_account_github_link(%Account{} = account) do
+    account
+    |> Ecto.Changeset.change(github_token: nil, github_link_state: nil, github_installation_id: nil)
     |> Repo.update()
     |> broadcast(:github_link)
   end

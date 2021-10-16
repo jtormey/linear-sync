@@ -14,6 +14,16 @@ defmodule Linear.GithubAPI do
     when is_binary(repo_owner) and is_binary(repo_name),
     do: {repo_owner, repo_name}
 
+  def user_id_by_username(username) when is_binary(username) do
+    case Tentacat.Users.find(username) do
+      {200, %{"id" => user_id}, _response} ->
+        {:ok, user_id}
+
+      {404, _body, _response} ->
+        {:error, :not_found}
+    end
+  end
+
   @impl true
   def viewer(client = %Client{}) do
     {200, result, _response} = Tentacat.Users.me(client)
