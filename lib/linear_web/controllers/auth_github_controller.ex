@@ -62,13 +62,7 @@ defmodule LinearWeb.AuthGithubController do
         :noop
     end
 
-    attrs = %{
-      github_token: nil,
-      github_link_state: nil,
-      github_installation_id: nil
-    }
-
-    case Accounts.update_account_github_link(account, attrs) do
+    case Accounts.delete_account_github_link(account) do
       {:ok, %Account{} = _account} ->
         conn
         |> redirect(to: Routes.link_github_path(conn, :index))
