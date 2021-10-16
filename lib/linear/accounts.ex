@@ -59,7 +59,7 @@ defmodule Linear.Accounts do
   """
   def update_account_github_link(%Account{} = account, attrs) do
     account
-    |> Ecto.Changeset.cast(attrs, [:github_token, :github_link_state])
+    |> Ecto.Changeset.cast(attrs, [:github_token, :github_link_state, :github_installation_id])
     |> Repo.update()
     |> broadcast(:github_link)
   end

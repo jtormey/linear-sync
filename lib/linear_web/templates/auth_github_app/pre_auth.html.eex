@@ -1,0 +1,13 @@
+<div class="h-full flex flex-col items-center justify-center">
+  <div class="w-2/3 -mt-64">
+    <div class="pb-8 mb-8 border-b border-dark-200 text-center">
+      <span class="text-indigo-500 text-4xl">⇄</span>
+      <h1 class="text-white text-2xl">LinearSync</h1>
+    </div>
+
+    <%= form_for :info, @auth_github_path, [method: :get], fn f -> %>
+      <%= label f, :gh_target, "GitHub username or organization", class: "text-dark-500 text-sm" %>
+      <%= text_input f, :gh_target, class: "el-input focus:shadow-outline-gray mb-8" %>
+      <%= submit "Continue to installation", class: "el-button" %>
+    <% end %>
+</div>

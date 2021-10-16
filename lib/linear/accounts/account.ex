@@ -12,6 +12,7 @@ defmodule Linear.Accounts.Account do
     field :organization_id, Ecto.UUID
     field :github_token, :string
     field :github_link_state, :string
+    field :github_installation_id, :string
 
     has_many :issue_syncs, IssueSync
 

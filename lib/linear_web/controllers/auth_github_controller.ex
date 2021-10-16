@@ -51,11 +51,21 @@ defmodule LinearWeb.AuthGithubController do
   def relink(conn, _params) do
     %Account{} = account = session_account(conn)
 
-    Auth.Github.delete_app_authorization!(account.github_token)
+    case account do
+      %Account{github_installation_id: val} when is_binary(val) ->
+        Auth.GithubApp.delete_app_authorization!(val)
+
+      %Account{github_token: val} when is_binary(val) ->
+        Auth.Github.delete_app_authorization!(val)
+
+      _otherwise ->
+        :noop
+    end
 
     attrs = %{
       github_token: nil,
-      github_link_state: nil
+      github_link_state: nil,
+      github_installation_id: nil
     }
 
     case Accounts.update_account_github_link(account, attrs) do
