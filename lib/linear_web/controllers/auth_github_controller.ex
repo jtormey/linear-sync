@@ -26,6 +26,11 @@ defmodule LinearWeb.AuthGithubController do
         {:ok, _account} = Accounts.update_account_github_link(account, %{github_token: access_token, github_link_state: nil})
         redirect(conn, to: Routes.auth_github_path(conn, :done))
 
+      nil ->
+        conn
+        |> put_flash(:error, "Please sign-in before installing LinearSync on GitHub")
+        |> redirect(to: Routes.session_path(conn, :index))
+
       _otherwise ->
         conn
         |> put_flash(:error, "Received unknown state code")
@@ -35,6 +40,28 @@ defmodule LinearWeb.AuthGithubController do
 
   def done(conn, _params) do
     render(conn, "done.html")
+  end
+
+  def relink(conn, _params) do
+    %Account{} = account = session_account(conn)
+
+    Auth.Github.delete_app_authorization!(account.github_token)
+
+    attrs = %{
+      github_token: nil,
+      github_link_state: nil
+    }
+
+    case Accounts.update_account_github_link(account, attrs) do
+      {:ok, %Account{} = _account} ->
+        conn
+        |> redirect(to: Routes.link_github_path(conn, :index))
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "Failed to initiate GitHub re-linking.")
+        |> redirect(to: Routes.link_github_path(conn, :index))
+    end
   end
 
   def session_account(conn) do

@@ -20,6 +20,7 @@ defmodule LinearWeb.Router do
     get "/auth/github", AuthGithubController, :auth
     get "/auth/github/callback", AuthGithubController, :callback
     get "/auth/github/done", AuthGithubController, :done
+    post "/auth/github/relink", AuthGithubController, :relink
 
     resources "/", SessionController, only: [:index]
     resources "/", SessionController, only: [:create, :delete], singleton: true
