@@ -19,6 +19,12 @@ defmodule LinearWeb.AuthGithubController do
     end
   end
 
+  def callback(conn, %{"error_description" => error_description}) do
+    conn
+    |> put_flash(:error, "Error installing GitHub App: #{inspect(error_description)}")
+    |> redirect(to: Routes.auth_github_path(conn, :done))
+  end
+
   def callback(conn, %{"code" => code, "state" => state}) do
     case session_account(conn) do
       %Account{github_link_state: ^state} = account ->
