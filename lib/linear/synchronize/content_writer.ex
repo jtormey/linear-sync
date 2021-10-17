@@ -112,6 +112,10 @@ defmodule Linear.Synchronize.ContentWriter do
   @doc """
   Returns the title for a Github issue updated from Linear.
   """
+  def github_issue_title_from_linear(%Ln.Issue{} = ln_issue) do
+    github_issue_title_from_linear(ln_issue.title, ln_issue)
+  end
+
   def github_issue_title_from_linear(original_title, %Ln.Issue{} = ln_issue) do
     original_title <> " " <> linear_issue_key(ln_issue)
   end
