@@ -8,7 +8,7 @@ defmodule Linear.Data.SharedIssueLock do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  schema "shared_issues" do
+  schema "shared_issue_locks" do
     field :expires_at, :utc_datetime
     belongs_to :shared_issue, SharedIssue
 
