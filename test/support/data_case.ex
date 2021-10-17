@@ -23,6 +23,7 @@ defmodule Linear.DataCase do
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
+      import Mox
       import Linear.DataCase
     end
   end
@@ -35,6 +36,14 @@ defmodule Linear.DataCase do
     end
 
     :ok
+  end
+
+  def expect_github_call(name, n, assert_fun) do
+    Mox.expect(Linear.GithubAPIMock, name, n, assert_fun)
+  end
+
+  def expect_linear_call(name, n, assert_fun) do
+    Mox.expect(Linear.LinearAPIMock, name, n, assert_fun)
   end
 
   @doc """
