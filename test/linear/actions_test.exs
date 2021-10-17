@@ -14,6 +14,8 @@ defmodule Linear.ActionsTest do
       shared_issue: shared_issue,
       repo_key: Linear.GithubAPI.to_repo_key!(shared_issue.issue_sync),
       github_issue: Gh.Issue.new(%{"title" => "Existing github title"}),
+      github_repo_labels: [%Gh.Label{id: 30001, name: "some label"}, %Gh.Label{id: 30002, name: "existing label"}],
+      github_issue_labels: [%Gh.Label{id: 30002, name: "existing label"}],
       linear_issue: Ln.Issue.new(%{"title" => "Existing linear title", "labels" => %{"nodes" => [%{"id" => 99, "name" => "Existing Label"}]}}),
       linear_labels: [%Ln.Label{id: 1, name: "Some Label"}, %Ln.Label{id: 99, name: "Existing Label"}]
     }
@@ -25,13 +27,13 @@ defmodule Linear.ActionsTest do
     test "ok: adds labels to a github issue", context do
       action =
         Actions.AddGithubLabels.new(%{
-          labels: ["Test label", "Test label 2"]
+          label_ids: [1, 99]
         })
 
       expect_github_call(:add_issue_labels, 1, fn _client, repo_key, issue_number, labels ->
         assert context.repo_key == repo_key
         assert context.shared_issue.github_issue_number == issue_number
-        assert action.labels == labels
+        assert ["some label"] == labels
         {200, nil, nil}
       end)
 
@@ -41,7 +43,7 @@ defmodule Linear.ActionsTest do
     test "ok: does nothing with no labels to add", context do
       action =
         Actions.AddGithubLabels.new(%{
-          labels: []
+          label_ids: []
         })
 
       expect_github_call(:add_issue_labels, 0, fn _, _, _, _ -> :noop end)
@@ -268,6 +270,29 @@ defmodule Linear.ActionsTest do
     end
   end
 
+  describe "FetchGithubLabels" do
+    test "ok: fetches github repo and issue labels", context do
+      action =
+        Actions.FetchGithubLabels.new()
+
+      expect_github_call(:list_repository_labels, 1, fn _client, repo_key ->
+        assert context.repo_key == repo_key
+        {200, [%{"id" => 30001, "name" => "some label"}, %{"id" => 30002, "name" => "existing label"}], nil}
+      end)
+
+      expect_github_call(:list_issue_labels, 1, fn _client, repo_key, issue_number ->
+        assert context.repo_key == repo_key
+        assert context.shared_issue.github_issue_number == issue_number
+        {200, [%{"id" => 30002, "name" => "existing label"}], nil}
+      end)
+
+      %{github_repo_labels: github_repo_labels, github_issue_labels: github_issue_labels} = context
+
+      assert {:ok, context} = Actions.FetchGithubLabels.process(action, context)
+      assert %{github_repo_labels: ^github_repo_labels, github_issue_labels: ^github_issue_labels} = context
+    end
+  end
+
   describe "FetchLinearIssue" do
     test "ok: fetches a linear issue by issue id number", context do
       action =
@@ -331,13 +356,13 @@ defmodule Linear.ActionsTest do
     test "ok: removes labels from a github issue", context do
       action =
         Actions.RemoveGithubLabels.new(%{
-          labels: ["Test existing label", "Test existing label 2"]
+          label_ids: [1, 99]
         })
 
-      expect_github_call(:remove_issue_labels, 2, fn _client, repo_key, issue_number, label ->
+      expect_github_call(:remove_issue_labels, 1, fn _client, repo_key, issue_number, label ->
         assert context.repo_key == repo_key
         assert context.shared_issue.github_issue_number == issue_number
-        assert label in action.labels
+        assert label in ["existing label"]
         {200, nil, nil}
       end)
 
@@ -347,7 +372,7 @@ defmodule Linear.ActionsTest do
     test "ok: does nothing with no labels to remove", context do
       action =
         Actions.RemoveGithubLabels.new(%{
-          labels: []
+          label_ids: []
         })
 
       expect_github_call(:remove_issue_labels, 0, fn _, _, _, _ -> :noop end)
@@ -412,7 +437,7 @@ defmodule Linear.ActionsTest do
     test "ok: removes a github label from a linear issue", context do
       action =
         Actions.UpdateLinearIssue.new(%{
-          remove_labels: [%Gh.Label{id: 30001, name: "existing label", color: "#ffffff", description: ""}]
+          remove_labels: [%Gh.Label{id: 30002, name: "existing label", color: "#ffffff", description: ""}]
         })
 
       expect_linear_call(:update_issue, 1, fn _session, args ->

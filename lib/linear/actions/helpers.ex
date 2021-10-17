@@ -50,6 +50,18 @@ defmodule Linear.Actions.Helpers do
     end
 
     @doc """
+    """
+    def get_updated_linear_labels(%{
+      "data" => %{"labelIds" => current_label_ids},
+      "updatedFrom" => %{"labelIds" => prev_label_ids}
+    }) do
+      %{
+        added_label_ids: current_label_ids -- prev_label_ids,
+        removed_label_ids: prev_label_ids -- current_label_ids
+      }
+    end
+
+    @doc """
     Checks if two labels are equal, uses a case-insensitive comparison.
     """
     def labels_match?(label_a, label_b) do
