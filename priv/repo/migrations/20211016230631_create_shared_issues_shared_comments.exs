@@ -37,5 +37,14 @@ defmodule Linear.Repo.Migrations.CreateSharedIssuesSharedComments do
     create index(:shared_comments, [:shared_issue_id])
     create unique_index(:shared_comments, [:linear_comment_id])
     create unique_index(:shared_comments, [:github_comment_id])
+
+    create table(:shared_issue_locks) do
+      add :shared_issue_id, references(:shared_issues, on_delete: :delete_all), null: false
+      add :expires_at, :utc_datetime, null: false
+
+      timestamps(updated_at: false)
+    end
+
+    create unique_index(:shared_issue_locks, [:shared_issue_id])
   end
 end
