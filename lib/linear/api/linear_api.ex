@@ -13,6 +13,7 @@ defmodule Linear.LinearAPI do
   alias GraphqlBuilder.Query
   alias __MODULE__.Session
 
+  @timeout 15_000 # 15s
   @base_url "https://api.linear.app"
 
   @impl __MODULE__.Behaviour
@@ -241,4 +242,7 @@ defmodule Linear.LinearAPI do
 
   @impl true
   def process_response_body(body), do: Jason.decode!(body)
+
+  @impl true
+  def process_request_options(opts), do: Keyword.put(opts, :recv_timeout, @timeout)
 end
