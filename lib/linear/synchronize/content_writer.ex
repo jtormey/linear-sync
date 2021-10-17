@@ -1,6 +1,6 @@
 defmodule Linear.Synchronize.ContentWriter do
-  alias Linear.Data.LnIssue
   alias Linear.GithubAPI.GithubData, as: Gh
+  alias Linear.LinearAPI.LinearData, as: Ln
 
   @doc """
   Returns the Linear issue title for a Github repo / issue combination.
@@ -52,6 +52,16 @@ defmodule Linear.Synchronize.ContentWriter do
     """
   end
 
+  @doc """
+  Returns a bracketed Linear issue key, i.e. "[AB-123]"
+  """
+  def linear_issue_key(%Ln.Issue{} = ln_issue) do
+    "[#{ln_issue.team.key}-#{ln_issue.number}]"
+  end
+
+  @doc """
+  Returns the Github issue body for a given linear issue.
+  """
   def github_issue_body(ln_issue) do
     """
     #{ln_issue["description"]}
@@ -76,7 +86,7 @@ defmodule Linear.Synchronize.ContentWriter do
   @doc """
   Returns the Github comment body for when an issue was moved to Linear.
   """
-  def github_issue_comment_body(%LnIssue{} = ln_issue, body) do
+  def github_issue_comment_body(%Ln.Issue{} = ln_issue, body) do
     """
     Comment from [Linear (##{ln_issue.number})](#{ln_issue.url})
 
@@ -90,13 +100,20 @@ defmodule Linear.Synchronize.ContentWriter do
   @doc """
   Returns the Github comment body for when an issue was moved to Linear.
   """
-  def github_issue_moved_comment_body(%LnIssue{} = ln_issue) do
+  def github_issue_moved_comment_body(%Ln.Issue{} = ln_issue) do
     """
     Automatically moved to [Linear (##{ln_issue.number})](#{ln_issue.url})
 
     ---
     *via LinearSync*
     """
+  end
+
+  @doc """
+  Returns the title for a Github issue updated from Linear.
+  """
+  def github_issue_title_from_linear(original_title, %Ln.Issue{} = ln_issue) do
+    original_title <> " " <> linear_issue_key(ln_issue)
   end
 
   @doc """
@@ -107,4 +124,17 @@ defmodule Linear.Synchronize.ContentWriter do
   end
 
   def via_linear_sync?(nil), do: false
+
+  @doc """
+  Parses Linear issue identifiers from a binary.
+
+  ## Examples
+
+    iex> parse_linear_issue_ids("[LN-93] My Github issue")
+    ["[LN-93]"]
+
+  """
+  def parse_linear_issue_ids(title) when is_binary(title) do
+    Regex.scan(~r/\[([A-Z0-9]+-\d+)\]/, title) |> Enum.map(&List.last/1)
+  end
 end

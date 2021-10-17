@@ -2,6 +2,7 @@ defmodule Linear.ActionsTest do
   use Linear.DataCase
 
   alias Linear.Actions
+  alias Linear.GithubAPI.GithubData, as: Gh
 
   @moduletag :actions
 
@@ -10,7 +11,8 @@ defmodule Linear.ActionsTest do
     %{
       issue_sync: shared_issue.issue_sync,
       shared_issue: shared_issue,
-      repo_key: Linear.GithubAPI.to_repo_key!(shared_issue.issue_sync)
+      repo_key: Linear.GithubAPI.to_repo_key!(shared_issue.issue_sync),
+      github_issue: Gh.Issue.new(%{"title" => "Existing github title"})
     }
   end
 
@@ -183,9 +185,17 @@ defmodule Linear.ActionsTest do
         {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
       end)
 
-      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
-      assert %Actions.UpdateGithubIssue{title: nil, state: :closed} = action
+
+      assert [
+          %Linear.Actions.CreateGithubComment{
+            body: "Automatically moved to [Linear (#93)]()\n\n---\n*via LinearSync*\n"
+          },
+          %Linear.Actions.UpdateGithubIssue{
+            state: :closed
+          }
+        ] = actions
     end
 
     test "ok: returns action to update github issue title when configured", context do
@@ -205,12 +215,17 @@ defmodule Linear.ActionsTest do
       context = %{context | issue_sync: issue_sync}
 
       expect_linear_call(:create_issue, 1, fn _session, _args ->
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}}
       end)
 
-      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
-      assert %Actions.UpdateGithubIssue{title: "Updated title", state: nil} = action
+
+      assert [
+          %Linear.Actions.UpdateGithubIssue{
+            title: "Existing github title [TST-93]"
+          }
+        ] = actions
     end
 
     test "ok: returns action to update github issue status and title when configured", context do
@@ -230,12 +245,23 @@ defmodule Linear.ActionsTest do
       context = %{context | issue_sync: issue_sync}
 
       expect_linear_call(:create_issue, 1, fn _session, _args ->
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}}
       end)
 
-      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
-      assert %Actions.UpdateGithubIssue{title: "Updated title", state: :closed} = action
+
+      assert [
+          %Linear.Actions.UpdateGithubIssue{
+            title: "Existing github title [TST-93]"
+          },
+          %Linear.Actions.CreateGithubComment{
+            body: "Automatically moved to [Linear (#93)](https://linear-issue-93)\n\n---\n*via LinearSync*\n"
+          },
+          %Linear.Actions.UpdateGithubIssue{
+            state: :closed
+          }
+        ] = actions
     end
   end
 

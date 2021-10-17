@@ -12,4 +12,14 @@ defmodule Linear.Actions.Helpers do
   def github_api() do
     Application.get_env(:linear, :github_api, GithubAPI)
   end
+
+  def combine_actions(actions) do
+    Enum.flat_map(actions, fn
+      nil ->
+        []
+
+      actions ->
+        List.wrap(actions)
+    end)
+  end
 end

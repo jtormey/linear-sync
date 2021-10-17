@@ -1,8 +1,11 @@
 defmodule Linear.Actions.CreateLinearIssue do
   alias Linear.Repo
   alias Linear.LinearAPI
+  alias Linear.LinearAPI.LinearData, as: Ln
   alias Linear.LinearQuery
   alias Linear.Actions
+  alias Linear.Actions.Helpers
+  alias Linear.Synchronize.ContentWriter
   alias Linear.Util
 
   @enforce_keys [:title, :body]
@@ -27,12 +30,15 @@ defmodule Linear.Actions.CreateLinearIssue do
 
     case LinearQuery.create_issue(session, args) do
       {:ok, linear_issue_data} ->
+        linear_issue = Ln.Issue.new(linear_issue_data)
+
         context =
-          Map.update!(
-            context,
+          context
+          |> Map.update!(
             :shared_issue,
-            &update_shared_issue!(&1, linear_issue_data)
+            &update_shared_issue!(&1, linear_issue)
           )
+          |> Map.put(:linear_issue, linear_issue)
 
         {:cont, {context, next_actions(context)}}
 
@@ -44,20 +50,35 @@ defmodule Linear.Actions.CreateLinearIssue do
   defp update_shared_issue!(shared_issue, linear_issue) do
     shared_issue
     |> Ecto.Changeset.change(
-      linear_issue_id: linear_issue["id"],
-      linear_issue_number: linear_issue["number"]
+      linear_issue_id: linear_issue.id,
+      linear_issue_number: linear_issue.number
     )
     |> Repo.update!()
   end
 
-  defp next_actions(%{issue_sync: issue_sync}) do
-    # format_gh_issue_title(gh_issue.title, format_issue_key(attrs))
+  defp next_actions(%{issue_sync: issue_sync} = context) do
+    sync_github_issue_titles_actions =
+      if issue_sync.sync_github_issue_titles do
+        Actions.UpdateGithubIssue.new(%{
+          title: ContentWriter.github_issue_title_from_linear(context.github_issue.title, context.linear_issue)
+        })
+      end
 
-    args =
-      %{}
-      |> Util.Control.put_if(:title, "Updated title", issue_sync.sync_github_issue_titles)
-      |> Util.Control.put_if(:state, :closed, issue_sync.close_on_open)
+    close_on_open_actions =
+      if issue_sync.close_on_open do
+        [
+          Actions.CreateGithubComment.new(%{
+            body: ContentWriter.github_issue_moved_comment_body(context.linear_issue)
+          }),
+          Actions.UpdateGithubIssue.new(%{
+            state: :closed
+          })
+        ]
+      end
 
-    if args == %{}, do: [], else: Actions.UpdateGithubIssue.new(args)
+    Helpers.combine_actions([
+      sync_github_issue_titles_actions,
+      close_on_open_actions
+    ])
   end
 end
