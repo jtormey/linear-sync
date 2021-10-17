@@ -44,8 +44,11 @@ defmodule Linear.LinearQuery do
 
   Possible args: [:title, :description, :stateId, :labelIds, :assigneeId]
   """
-  def update_issue(%Session{} = session, %LnIssue{} = ln_issue, args) do
-    args = Keyword.merge(args, issueId: ln_issue.id)
+  def update_issue(%Session{} = session, %LnIssue{} = ln_issue, args),
+    do: update_issue(%Session{} = session, ln_issue.id, args)
+
+  def update_issue(%Session{} = session, ln_issue_id, args) do
+    args = Keyword.merge(args, issueId: ln_issue_id)
 
     result = @linear_api.update_issue(session, args)
 
@@ -64,8 +67,11 @@ defmodule Linear.LinearQuery do
 
   Possible args: [:body]
   """
-  def create_issue_comment(%Session{} = session, %LnIssue{} = ln_issue, args) do
-    args = Keyword.merge(args, issueId: ln_issue.id)
+  def create_issue_comment(%Session{} = session, %LnIssue{} = ln_issue, args),
+    do: create_issue_comment(session, ln_issue.id, args)
+
+  def create_issue_comment(%Session{} = session, ln_issue_id, args) do
+    args = Keyword.merge(args, issueId: ln_issue_id)
 
     result = @linear_api.create_comment(session, args)
 

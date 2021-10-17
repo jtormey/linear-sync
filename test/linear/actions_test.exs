@@ -82,6 +82,163 @@ defmodule Linear.ActionsTest do
     end
   end
 
+  describe "CreateLinearComment" do
+    test "ok: creates a linear comment", context do
+      action =
+        Actions.CreateLinearComment.new(%{
+          body: "Test comment body"
+        })
+
+      expect_linear_call(:create_comment, 1, fn _session, args ->
+        assert args[:issueId] == context.shared_issue.linear_issue_id
+        assert args[:body] == "Test comment body"
+        {:ok, %{"data" => %{"commentCreate" => %{"success" => true, "comment" => %{}}}}}
+      end)
+
+      assert {:ok, _context} = Actions.CreateLinearComment.process(action, context)
+    end
+  end
+
+  describe "CreateLinearIssue" do
+    test "ok: creates a linear issue", context do
+      action =
+        Actions.CreateLinearIssue.new(%{
+          title: "Test title",
+          body: "Test body"
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      expect_linear_call(:create_issue, 1, fn _session, args ->
+        assert args[:title] == "Test title"
+        assert args[:description] == "Test body"
+        assert args[:teamId] == context.issue_sync.team_id
+
+        refute Keyword.has_key?(args, :stateId)
+        refute Keyword.has_key?(args, :labelIds)
+        refute Keyword.has_key?(args, :assigneeId)
+
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+      end)
+
+      assert {:cont, {context, []}} = Actions.CreateLinearIssue.process(action, context)
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+    end
+
+    test "ok: creates a linear issue with a configured issue sync", context do
+      action =
+        Actions.CreateLinearIssue.new(%{
+          title: "Test title",
+          body: "Test body"
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      issue_sync_updates = %{
+        label_id: Ecto.UUID.generate(),
+        assignee_id: Ecto.UUID.generate(),
+        open_state_id: Ecto.UUID.generate()
+      }
+
+      issue_sync =
+        context.issue_sync
+        |> Ecto.Changeset.change(issue_sync_updates)
+        |> Linear.Repo.update!()
+
+      context = %{context | issue_sync: issue_sync}
+
+      expect_linear_call(:create_issue, 1, fn _session, args ->
+        assert args[:title] == "Test title"
+        assert args[:description] == "Test body"
+        assert args[:teamId] == context.issue_sync.team_id
+
+        assert args[:stateId] == issue_sync_updates.open_state_id
+        assert args[:labelIds] == [issue_sync_updates.label_id]
+        assert args[:assigneeId] == issue_sync_updates.assignee_id
+
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+      end)
+
+      assert {:cont, {context, []}} = Actions.CreateLinearIssue.process(action, context)
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+    end
+
+    test "ok: returns action to update github issue status when configured", context do
+      action =
+        Actions.CreateLinearIssue.new(%{
+          title: "Test title",
+          body: "Test body"
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      issue_sync =
+        context.issue_sync
+        |> Ecto.Changeset.change(close_on_open: true)
+        |> Linear.Repo.update!()
+
+      context = %{context | issue_sync: issue_sync}
+
+      expect_linear_call(:create_issue, 1, fn _session, _args ->
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+      end)
+
+      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+      assert %Actions.UpdateGithubIssue{title: nil, state: :closed} = action
+    end
+
+    test "ok: returns action to update github issue title when configured", context do
+      action =
+        Actions.CreateLinearIssue.new(%{
+          title: "Test title",
+          body: "Test body"
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      issue_sync =
+        context.issue_sync
+        |> Ecto.Changeset.change(sync_github_issue_titles: true)
+        |> Linear.Repo.update!()
+
+      context = %{context | issue_sync: issue_sync}
+
+      expect_linear_call(:create_issue, 1, fn _session, _args ->
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+      end)
+
+      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+      assert %Actions.UpdateGithubIssue{title: "Updated title", state: nil} = action
+    end
+
+    test "ok: returns action to update github issue status and title when configured", context do
+      action =
+        Actions.CreateLinearIssue.new(%{
+          title: "Test title",
+          body: "Test body"
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      issue_sync =
+        context.issue_sync
+        |> Ecto.Changeset.change(close_on_open: true, sync_github_issue_titles: true)
+        |> Linear.Repo.update!()
+
+      context = %{context | issue_sync: issue_sync}
+
+      expect_linear_call(:create_issue, 1, fn _session, _args ->
+        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+      end)
+
+      assert {:cont, {context, action}} = Actions.CreateLinearIssue.process(action, context)
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+      assert %Actions.UpdateGithubIssue{title: "Updated title", state: :closed} = action
+    end
+  end
+
   describe "RemoveGithubLabels" do
     test "ok: removes labels from a github issue", context do
       action =
@@ -126,6 +283,42 @@ defmodule Linear.ActionsTest do
       end)
 
       assert {:ok, _context} = Actions.UpdateGithubIssue.process(action, context)
+    end
+  end
+
+  describe "UpdateLinearIssue" do
+    test "ok: updates the state of a linear issue", context do
+      state_id = Ecto.UUID.generate()
+
+      action =
+        Actions.UpdateLinearIssue.new(%{
+          state_id: state_id
+        })
+
+      expect_linear_call(:update_issue, 1, fn _session, args ->
+        assert args[:issueId] == context.shared_issue.linear_issue_id
+        assert args[:stateId] == state_id
+        {:ok, %{"data" => %{"issueUpdate" => %{"success" => true, "issue" => %{}}}}}
+      end)
+
+      assert {:ok, _context} = Actions.UpdateLinearIssue.process(action, context)
+    end
+
+    test "ok: updates the labels of a linear issue", context do
+      label_ids = [Ecto.UUID.generate(), Ecto.UUID.generate()]
+
+      action =
+        Actions.UpdateLinearIssue.new(%{
+          label_ids: label_ids
+        })
+
+      expect_linear_call(:update_issue, 1, fn _session, args ->
+        assert args[:issueId] == context.shared_issue.linear_issue_id
+        assert args[:labelIds] == label_ids
+        {:ok, %{"data" => %{"issueUpdate" => %{"success" => true, "issue" => %{}}}}}
+      end)
+
+      assert {:ok, _context} = Actions.UpdateLinearIssue.process(action, context)
     end
   end
 end

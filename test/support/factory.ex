@@ -2,7 +2,10 @@ defmodule Linear.Factory do
   use ExMachina.Ecto, repo: Linear.Repo
 
   def account_factory() do
-    %Linear.Accounts.Account{}
+    %Linear.Accounts.Account{
+      api_key: Ecto.UUID.generate(),
+      organization_id: Ecto.UUID.generate()
+    }
   end
 
   def issue_sync_factory() do
