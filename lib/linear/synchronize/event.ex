@@ -10,8 +10,6 @@ defmodule Linear.Synchronize.Event do
   defstruct [
     :source,
     :action,
-    :repo_id,
-    :team_id,
     :issue_sync_id,
     data: %{}
   ]
