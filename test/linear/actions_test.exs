@@ -265,6 +265,47 @@ defmodule Linear.ActionsTest do
     end
   end
 
+  describe "FetchLinearIssue" do
+    test "ok: fetches a linear issue by issue id number", context do
+      action =
+        Actions.FetchLinearIssue.new(%{
+          issue_number: 93
+        })
+
+      issue_id = Ecto.UUID.generate()
+
+      expect_linear_call(:issue, 1, fn _session, 93 ->
+        {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
+      end)
+
+      assert {:ok, context} = Actions.FetchLinearIssue.process(action, context)
+      assert %{id: ^issue_id, number: 93} = context.linear_issue
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+    end
+
+    test "ok: fetches a linear issue by inferred issue id", context do
+      action =
+        Actions.FetchLinearIssue.new()
+
+      issue_id = Ecto.UUID.generate()
+
+      shared_issue =
+        context.shared_issue
+        |> Ecto.Changeset.change(linear_issue_id: issue_id, linear_issue_number: 93)
+        |> Linear.Repo.update!()
+
+      context = %{context | shared_issue: shared_issue}
+
+      expect_linear_call(:issue, 1, fn _session, 93 ->
+        {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
+      end)
+
+      assert {:ok, context} = Actions.FetchLinearIssue.process(action, context)
+      assert %{id: ^issue_id, number: 93} = context.linear_issue
+      assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+    end
+  end
+
   describe "RemoveGithubLabels" do
     test "ok: removes labels from a github issue", context do
       action =

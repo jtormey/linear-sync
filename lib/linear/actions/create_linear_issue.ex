@@ -1,5 +1,4 @@
 defmodule Linear.Actions.CreateLinearIssue do
-  alias Linear.Repo
   alias Linear.LinearAPI
   alias Linear.LinearAPI.LinearData, as: Ln
   alias Linear.LinearQuery
@@ -36,7 +35,7 @@ defmodule Linear.Actions.CreateLinearIssue do
           context
           |> Map.update!(
             :shared_issue,
-            &update_shared_issue!(&1, linear_issue)
+            &Helpers.update_shared_issue!(&1, linear_issue)
           )
           |> Map.put(:linear_issue, linear_issue)
 
@@ -45,15 +44,6 @@ defmodule Linear.Actions.CreateLinearIssue do
       :error ->
         {:error, :create_linear_issue}
     end
-  end
-
-  defp update_shared_issue!(shared_issue, linear_issue) do
-    shared_issue
-    |> Ecto.Changeset.change(
-      linear_issue_id: linear_issue.id,
-      linear_issue_number: linear_issue.number
-    )
-    |> Repo.update!()
   end
 
   defp next_actions(%{issue_sync: issue_sync} = context) do

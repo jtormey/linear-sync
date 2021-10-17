@@ -126,15 +126,15 @@ defmodule Linear.Synchronize.ContentWriter do
   def via_linear_sync?(nil), do: false
 
   @doc """
-  Parses Linear issue identifiers from a binary.
+  Parses Linear issue identifier numbers from a binary.
 
   ## Examples
 
-    iex> parse_linear_issue_ids("[LN-93] My Github issue")
+    iex> parse_linear_issue_numbers("[LN-93] My Github issue")
     ["[LN-93]"]
 
   """
-  def parse_linear_issue_ids(title) when is_binary(title) do
+  def parse_linear_issue_numbers(title) when is_binary(title) do
     Regex.scan(~r/\[([A-Z0-9]+-\d+)\]/, title) |> Enum.map(&List.last/1)
   end
 end
