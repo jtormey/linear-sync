@@ -88,8 +88,11 @@ defmodule Linear.LinearQuery do
   @doc """
   Lists all labels currently applied to an issue in Linear.
   """
-  def list_issue_labels(%Session{} = session, %LnIssue{} = ln_issue) do
-    result = @linear_api.issue(session, ln_issue.id)
+  def list_issue_labels(%Session{} = session, %LnIssue{} = ln_issue),
+    do: list_issue_labels(session, ln_issue.id)
+
+  def list_issue_labels(%Session{} = session, ln_issue_id) do
+    result = @linear_api.issue(session, ln_issue_id)
 
     case result do
       {:ok, %{"data" => %{"issue" => issue}}} ->

@@ -52,6 +52,81 @@ defmodule Linear.ActionsTest do
     end
   end
 
+  describe "BlockLinearPrivateIssue" do
+    @private_label %{"id" => 400, "name" => "Private"}
+
+    test "ok: continues if an issue is not private (from context)", context do
+      action =
+        Actions.BlockLinearPrivateIssue.new()
+
+      assert {:ok, _context} = Actions.BlockLinearPrivateIssue.process(action, context)
+    end
+
+    test "error: fails if an issue has a private label (from context)", context do
+      action =
+        Actions.BlockLinearPrivateIssue.new()
+
+      linear_issue =
+        Ln.Issue.new(%{"title" => "Existing linear title", "labels" => %{"nodes" => [@private_label]}})
+
+      context = %{context | linear_issue: linear_issue}
+
+      assert {:error, :linear_issue_is_private} = Actions.BlockLinearPrivateIssue.process(action, context)
+    end
+
+    test "ok: continues if an issue is not private (from linear query)", context do
+      action =
+        Actions.BlockLinearPrivateIssue.new()
+
+      linear_issue =
+        Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
+
+      context = %{context | linear_issue: linear_issue}
+
+      expect_linear_call(:issue, 1, fn _session, issue_id ->
+        assert context.shared_issue.id == issue_id
+        {:ok, %{"data" => %{"issue" => %{"labels" => %{"nodes" => []}}}}}
+      end)
+
+      assert {:ok, _context} = Actions.BlockLinearPrivateIssue.process(action, context)
+    end
+
+    test "error: fails if an issue has a private label (from linear query)", context do
+      action =
+        Actions.BlockLinearPrivateIssue.new()
+
+      linear_issue =
+        Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
+
+      context = %{context | linear_issue: linear_issue}
+
+      expect_linear_call(:issue, 1, fn _session, issue_id ->
+        assert context.shared_issue.id == issue_id
+        {:ok, %{"data" => %{"issue" => %{"labels" => %{"nodes" => [@private_label]}}}}}
+      end)
+
+      assert {:error, :linear_issue_is_private} = Actions.BlockLinearPrivateIssue.process(action, context)
+    end
+
+    @tag capture_log: true
+    test "error: fails if no labels can be found", context do
+      action =
+        Actions.BlockLinearPrivateIssue.new()
+
+      linear_issue =
+        Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
+
+      context = %{context | linear_issue: linear_issue}
+
+      expect_linear_call(:issue, 1, fn _session, issue_id ->
+        assert context.shared_issue.id == issue_id
+        {:ok, %{"data" => %{"badResponse" => true}}}
+      end)
+
+      assert {:error, :block_linear_private_issue} = Actions.BlockLinearPrivateIssue.process(action, context)
+    end
+  end
+
   describe "CreateGithubComment" do
     test "ok: creates a github comment", context do
       action =
