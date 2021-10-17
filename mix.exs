@@ -40,6 +40,7 @@ defmodule Linear.MixProject do
       {:phoenix_live_view, "~> 0.15.1"},
       {:floki, ">= 0.0.0", only: :test},
       {:mox, "~> 1.0", only: :test},
+      {:ex_machina, "~> 2.7.0", only: :test},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
