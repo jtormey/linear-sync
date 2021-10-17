@@ -3,6 +3,7 @@ defmodule Linear.ActionsTest do
 
   alias Linear.Actions
   alias Linear.GithubAPI.GithubData, as: Gh
+  alias Linear.LinearAPI.LinearData, as: Ln
 
   @moduletag :actions
 
@@ -303,6 +304,24 @@ defmodule Linear.ActionsTest do
       assert {:ok, context} = Actions.FetchLinearIssue.process(action, context)
       assert %{id: ^issue_id, number: 93} = context.linear_issue
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
+    end
+  end
+
+  describe "FetchLinearLabels" do
+    test "ok: fetches all linear labels", context do
+      action =
+        Actions.FetchLinearLabels.new()
+
+      expect_linear_call(:list_issue_labels, 1, fn _session ->
+        {:ok, %{"data" => %{"issueLabels" => %{"nodes" => [%{"id" => 1, "name" => "Test label 1"}, %{"id" => 2, "name" => "Test label 2"}]}}}}
+      end)
+
+      assert {:ok, context} = Actions.FetchLinearLabels.process(action, context)
+
+      assert [
+          %Ln.Label{id: 1, name: "Test label 1"},
+          %Ln.Label{id: 2, name: "Test label 2"}
+        ] = context.linear_labels
     end
   end
 

@@ -29,6 +29,15 @@ defmodule Linear.LinearAPI.LinearData do
     end
   end
 
+  defmodule Label do
+    @enforce_keys [:id, :name]
+    defstruct [:id, :name]
+
+    def new(attrs) do
+      LinearData.new(__MODULE__, attrs)
+    end
+  end
+
   def new(struct_module, attrs) do
     fields =
       struct_module.__struct__()
