@@ -2,6 +2,7 @@ defmodule Linear.Actions.Helpers do
   alias Linear.Repo
   alias Linear.GithubAPI
   alias Linear.Data.IssueSync
+  alias Linear.GithubAPI.GithubData, as: Gh
   alias Linear.LinearAPI.LinearData, as: Ln
 
   def client_repo_key(%IssueSync{} = issue_sync) do
@@ -31,5 +32,28 @@ defmodule Linear.Actions.Helpers do
       linear_issue_number: linear_issue.number
     )
     |> Repo.update!()
+  end
+
+  defmodule Labels do
+    @doc """
+    """
+    def to_label_mapset(labels) when is_list(labels) do
+      labels |> Enum.reject(& &1 == nil) |> Enum.map(& &1.id) |> MapSet.new()
+    end
+
+    @doc """
+    """
+    def get_corresponding_linear_label(%Gh.Label{} = github_label, linear_labels) do
+      Enum.find(linear_labels, fn %Ln.Label{} = linear_label ->
+        if labels_match?(linear_label.name, github_label.name), do: linear_label, else: nil
+      end)
+    end
+
+    @doc """
+    Checks if two labels are equal, uses a case-insensitive comparison.
+    """
+    def labels_match?(label_a, label_b) do
+      String.downcase(label_a) == String.downcase(label_b)
+    end
   end
 end

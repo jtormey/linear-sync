@@ -3,11 +3,12 @@ defmodule Linear.LinearAPI.LinearData do
 
   defmodule Issue do
     @enforce_keys [:id, :team_id, :title, :description, :number, :url, :team]
-    defstruct [:id, :team_id, :title, :description, :number, :url, :team]
+    defstruct [:id, :team_id, :title, :description, :number, :url, :team, :labels]
 
     def new(attrs) do
       LinearData.new(__MODULE__, attrs)
       |> Map.update!(:team, &LinearData.Team.new/1)
+      |> Map.update!(:labels, &LinearData.Label.new_list/1)
     end
   end
 
@@ -36,6 +37,12 @@ defmodule Linear.LinearAPI.LinearData do
     def new(attrs) do
       LinearData.new(__MODULE__, attrs)
     end
+
+    def new_list(%{"nodes" => labels}) do
+      Enum.map(labels, &LinearData.new(__MODULE__, &1))
+    end
+
+    def new_list(_otherwise), do: nil
   end
 
   def new(struct_module, attrs) do
