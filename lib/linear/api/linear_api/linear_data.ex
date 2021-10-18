@@ -13,8 +13,8 @@ defmodule Linear.LinearAPI.LinearData do
   end
 
   defmodule Comment do
-    @enforce_keys [:id]
-    defstruct [:id]
+    @enforce_keys [:id, :body]
+    defstruct [:id, :body]
 
     def new(attrs) do
       LinearData.new(__MODULE__, attrs)
