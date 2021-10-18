@@ -30,6 +30,8 @@ defmodule Linear.Data.SharedIssue do
     shared_issue
     |> cast(Event.attrs(event), source_attrs(event.source))
     |> validate_required(source_attrs(event.source))
+    |> unique_constraint(:linear_issue_id)
+    |> unique_constraint(:github_issue_id)
   end
 
   defp source_attrs(:github), do: [:issue_sync_id, :github_issue_id, :github_issue_number]
