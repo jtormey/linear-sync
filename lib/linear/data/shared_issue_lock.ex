@@ -33,7 +33,15 @@ defmodule Linear.Data.SharedIssueLock do
 
   defp acquire_changeset(shared_issue_lock, %SharedIssue{} = shared_issue) do
     shared_issue_lock
-    |> change(shared_issue_id: shared_issue.id)
+    |> change(shared_issue_id: shared_issue.id, expires_at: Date)
+    |> put_expires_at(in_seconds: 30)
     |> unique_constraint(:shared_issue_id, message: "issue is currently locked")
+  end
+
+  defp put_expires_at(changeset, opts) do
+    expires_in = Keyword.fetch!(opts, :in_seconds)
+    expires_at = DateTime.add(DateTime.utc_now(), expires_in, :second)
+    expires_at = expires_at |> DateTime.truncate(:second)
+    put_change(changeset, :expires_at, expires_at)
   end
 end
