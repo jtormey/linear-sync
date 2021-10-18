@@ -43,7 +43,7 @@ defmodule Linear.GithubAPI do
 
   @impl true
   def update_issue(client = %Client{}, {owner, repo}, issue_number, params) do
-    params = Map.take(params, ["title"])
+    params = Map.take(params, ["title", "state"])
     Tentacat.Issues.update(client, owner, repo, issue_number, params)
   end
 
