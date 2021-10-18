@@ -16,9 +16,30 @@ defmodule Linear.Data.SharedIssueLock do
   end
 
   @doc """
-  Acquires a lock on a shared_issue record.
+  Acquires a lock on a shared_issue record by polling every second.
   """
-  def acquire(%SharedIssue{} = shared_issue) do
+  def acquire(%SharedIssue{} = shared_issue, opts \\ []) do
+    do_acquire(shared_issue, Keyword.fetch!(opts, :max_attempts))
+  end
+
+  defp do_acquire(shared_issue, max_attempts) do
+    case {acquire_now(shared_issue), max_attempts - 1} do
+      {{:ok, _lock} = result, _attempts_remaining} ->
+        result
+
+      {{:error, _reason} = error, 0} ->
+        error
+
+      {{:error, _reason}, attempts_remaining} ->
+        Process.sleep(1000)
+        do_acquire(shared_issue, attempts_remaining)
+    end
+  end
+
+  @doc """
+  Acquires a lock on a shared_issue record with no retries.
+  """
+  def acquire_now(%SharedIssue{} = shared_issue) do
     %__MODULE__{}
     |> acquire_changeset(shared_issue)
     |> Repo.insert()
