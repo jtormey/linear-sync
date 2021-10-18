@@ -16,7 +16,7 @@ defmodule Linear.Actions.Helpers do
   end
 
   def combine_actions(actions) do
-    Enum.flat_map(actions, fn
+    Enum.flat_map(List.wrap(actions), fn
       nil ->
         []
 
