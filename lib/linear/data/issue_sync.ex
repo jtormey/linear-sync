@@ -3,7 +3,6 @@ defmodule Linear.Data.IssueSync do
   import Ecto.Changeset
 
   alias Linear.Accounts.Account
-  alias Linear.Data.LnIssue
   alias Linear.Data.SharedIssue
   alias Linear.Webhooks.{LinearWebhook, GithubWebhook}
 
@@ -30,7 +29,6 @@ defmodule Linear.Data.IssueSync do
     field :sync_github_issue_titles, :boolean, default: false
 
     belongs_to :account, Account
-    has_many :ln_issues, LnIssue
     has_many :shared_issues, SharedIssue
 
     belongs_to :linear_internal_webhook, LinearWebhook, on_replace: :nilify

@@ -8,8 +8,6 @@ defmodule Linear.Data do
 
   alias Linear.Accounts.Account
   alias Linear.Data.IssueSync
-  alias Linear.Data.LnIssue
-  alias Linear.Data.LnComment
   alias Linear.Webhooks.{LinearWebhook, GithubWebhook}
 
   @doc """
@@ -117,54 +115,5 @@ defmodule Linear.Data do
   """
   def change_issue_sync(%IssueSync{} = issue_sync, attrs \\ %{}) do
     IssueSync.changeset(issue_sync, attrs)
-  end
-
-  @doc """
-  Gets a single ln_issue.
-  """
-  def get_ln_issue(id), do: Repo.get(LnIssue, id) |> Repo.preload(:issue_sync)
-
-  def list_ln_issues_by_github_issue_id(github_issue_id) do
-    Repo.all from l in LnIssue,
-      join: i in assoc(l, :issue_sync),
-      join: a in assoc(i, :account),
-      where: l.github_issue_id == ^github_issue_id and i.enabled == true,
-      preload: [issue_sync: {i, account: a}]
-  end
-
-  def create_ln_issue(issue_sync = %IssueSync{}, attrs \\ %{}) do
-    %LnIssue{}
-    |> LnIssue.assoc_changeset(issue_sync, attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Returns the list of ln_comments.
-  """
-  def list_ln_comments do
-    Repo.all(LnComment)
-  end
-
-  @doc """
-  Gets a single ln_comment.
-
-  Raises `Ecto.NoResultsError` if the Ln comment does not exist.
-  """
-  def get_ln_comment!(id), do: Repo.get!(LnComment, id)
-
-  @doc """
-  Creates a ln_comment.
-  """
-  def create_ln_comment(ln_issue = %LnIssue{}, attrs \\ %{}) do
-    %LnComment{}
-    |> LnComment.assoc_changeset(ln_issue, attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Deletes a ln_comment.
-  """
-  def delete_ln_comment(%LnComment{} = ln_comment) do
-    Repo.delete(ln_comment)
   end
 end

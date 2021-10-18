@@ -3,7 +3,7 @@ defmodule Linear.LinearQuery do
 
   alias Linear.LinearAPI
   alias Linear.LinearAPI.Session
-  alias Linear.Data.LnIssue
+  alias Linear.LinearAPI.LinearData, as: Ln
 
   @linear_api Application.get_env(:linear, :linear_api, LinearAPI)
 
@@ -44,7 +44,7 @@ defmodule Linear.LinearQuery do
 
   Possible args: [:title, :description, :stateId, :labelIds, :assigneeId]
   """
-  def update_issue(%Session{} = session, %LnIssue{} = ln_issue, args),
+  def update_issue(%Session{} = session, %Ln.Issue{} = ln_issue, args),
     do: update_issue(%Session{} = session, ln_issue.id, args)
 
   def update_issue(%Session{} = session, ln_issue_id, args) do
@@ -67,7 +67,7 @@ defmodule Linear.LinearQuery do
 
   Possible args: [:body]
   """
-  def create_issue_comment(%Session{} = session, %LnIssue{} = ln_issue, args),
+  def create_issue_comment(%Session{} = session, %Ln.Issue{} = ln_issue, args),
     do: create_issue_comment(session, ln_issue.id, args)
 
   def create_issue_comment(%Session{} = session, ln_issue_id, args) do
@@ -88,7 +88,7 @@ defmodule Linear.LinearQuery do
   @doc """
   Lists all labels currently applied to an issue in Linear.
   """
-  def list_issue_labels(%Session{} = session, %LnIssue{} = ln_issue),
+  def list_issue_labels(%Session{} = session, %Ln.Issue{} = ln_issue),
     do: list_issue_labels(session, ln_issue.id)
 
   def list_issue_labels(%Session{} = session, ln_issue_id) do
