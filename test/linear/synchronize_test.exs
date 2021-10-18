@@ -76,6 +76,7 @@ defmodule Linear.SynchronizeTest do
         assert {"test_owner", "test_repo"} = repo_key
         assert 2 == issue_number
         assert args["title"] =~ "[LN-3]"
+        {200, nil, nil}
       end)
 
       simulate(:github_issue_opened)
@@ -92,11 +93,14 @@ defmodule Linear.SynchronizeTest do
         assert {"test_owner", "test_repo"} = repo_key
         assert 2 == issue_number
         assert body =~ "Automatically moved to [Linear (#3)]"
+        {201, nil, nil}
       end)
 
-      expect(Linear.GithubAPIMock, :close_issue, 1, fn _client, repo_key, issue_number ->
+      expect(Linear.GithubAPIMock, :update_issue, 1, fn _client, repo_key, issue_number, args ->
         assert {"test_owner", "test_repo"} = repo_key
         assert 2 == issue_number
+        assert %{"state" => "closed"} = args
+        {200, nil, nil}
       end)
 
       simulate(:github_issue_opened)
