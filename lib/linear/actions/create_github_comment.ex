@@ -3,8 +3,8 @@ defmodule Linear.Actions.CreateGithubComment do
 
   alias Linear.Actions.Helpers
 
-  @enforce_keys [:body]
-  defstruct [:body]
+  @enforce_keys []
+  defstruct [:body, :create_body]
 
   def new(fields), do: struct(__MODULE__, fields)
 
@@ -15,7 +15,7 @@ defmodule Linear.Actions.CreateGithubComment do
       client,
       repo_key,
       context.shared_issue.github_issue_number,
-      action.body
+      action.body || action.create_body.(context)
     )
     |> case do
       {201, _body, _response} ->

@@ -16,7 +16,7 @@ defmodule Linear.ActionsTest do
       github_issue: Gh.Issue.new(%{"title" => "Existing github title"}),
       github_repo_labels: [%Gh.Label{id: 30001, name: "some label"}, %Gh.Label{id: 30002, name: "existing label"}],
       github_issue_labels: [%Gh.Label{id: 30002, name: "existing label"}],
-      linear_issue: Ln.Issue.new(%{"title" => "Existing linear title", "labels" => %{"nodes" => [%{"id" => 99, "name" => "Existing Label"}]}}),
+      linear_issue: Ln.Issue.new(%{"title" => "Existing linear title", "number" => 93, "team" => %{"key" => "TST"}, "labels" => %{"nodes" => [%{"id" => 99, "name" => "Existing Label"}]}}),
       linear_labels: [%Ln.Label{id: 1, name: "Some Label"}, %Ln.Label{id: 99, name: "Existing Label"}]
     }
   end
@@ -131,7 +131,7 @@ defmodule Linear.ActionsTest do
     test "ok: creates a github comment", context do
       action =
         Actions.CreateGithubComment.new(%{
-          body: "Test comment body"
+          create_body: fn _context -> "Test comment body" end
         })
 
       expect_github_call(:create_issue_comment, 1, fn _client, repo_key, issue_number, body ->
@@ -372,12 +372,12 @@ defmodule Linear.ActionsTest do
     test "ok: fetches a linear issue by issue id number", context do
       action =
         Actions.FetchLinearIssue.new(%{
-          issue_number: 93
+          issue_key: "TST-93"
         })
 
       issue_id = Ecto.UUID.generate()
 
-      expect_linear_call(:issue, 1, fn _session, 93 ->
+      expect_linear_call(:issue, 1, fn _session, "TST-93" ->
         {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
       end)
 
@@ -386,20 +386,13 @@ defmodule Linear.ActionsTest do
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
     end
 
-    test "ok: fetches a linear issue by inferred issue id", context do
+    test "ok: fetches a linear issue by inferred issue key", context do
       action =
         Actions.FetchLinearIssue.new()
 
       issue_id = Ecto.UUID.generate()
 
-      shared_issue =
-        context.shared_issue
-        |> Ecto.Changeset.change(linear_issue_id: issue_id, linear_issue_number: 93)
-        |> Linear.Repo.update!()
-
-      context = %{context | shared_issue: shared_issue}
-
-      expect_linear_call(:issue, 1, fn _session, 93 ->
+      expect_linear_call(:issue, 1, fn _session, "TST-93" ->
         {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
       end)
 

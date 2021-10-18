@@ -54,21 +54,29 @@ defmodule Linear.Synchronize.ContentWriter do
 
   @doc """
   Returns a bracketed Linear issue key, i.e. "[AB-123]"
+
+  Accepts a `brackets: false` opt to return an issue key without brackets.
   """
-  def linear_issue_key(%Ln.Issue{} = ln_issue) do
-    "[#{ln_issue.team.key}-#{ln_issue.number}]"
+  def linear_issue_key(ln_issue, opts \\ [])
+
+  def linear_issue_key(%Ln.Issue{team: %Ln.Team{key: team_key}, number: number}, opts)
+    when not is_nil(team_key) and not is_nil(number) do
+    issue_key = "#{team_key}-#{number}"
+    if Keyword.get(opts, :brackets, true), do: "[#{issue_key}]", else: issue_key
   end
+
+  def linear_issue_key(%Ln.Issue{} = _otherwise, _opts), do: nil
 
   @doc """
   Returns the Github issue body for a given linear issue.
   """
-  def github_issue_body(ln_issue) do
+  def github_issue_body(%Ln.Issue{} = ln_issue) do
     """
-    #{ln_issue["description"]}
+    #{ln_issue.description}
 
-    #{if ln_issue["description"], do: "___"}
+    #{if ln_issue.description, do: "___"}
 
-    Automatically created from [Linear (##{ln_issue["number"]})](#{ln_issue["url"]})
+    Automatically created from [Linear (##{ln_issue.number})](#{ln_issue.url})
 
     *via LinearSync*
     """
@@ -130,15 +138,15 @@ defmodule Linear.Synchronize.ContentWriter do
   def via_linear_sync?(nil), do: false
 
   @doc """
-  Parses Linear issue identifier numbers from a binary.
+  Parses Linear issue keys from a binary.
 
   ## Examples
 
-    iex> parse_linear_issue_numbers("[LN-93] My Github issue")
+    iex> parse_linear_issue_keys("[LN-93] My Github issue")
     ["[LN-93]"]
 
   """
-  def parse_linear_issue_numbers(title) when is_binary(title) do
+  def parse_linear_issue_keys(title) when is_binary(title) do
     Regex.scan(~r/\[([A-Z0-9]+-\d+)\]/, title) |> Enum.map(&List.last/1)
   end
 end
