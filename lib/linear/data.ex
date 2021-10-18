@@ -44,6 +44,14 @@ defmodule Linear.Data do
       preload: [account: a]
   end
 
+  def list_issue_syncs_by_linear_issue_id(linear_issue_id) do
+    Repo.all from i in IssueSync,
+      join: a in assoc(i, :account),
+      join: s in assoc(i, :shared_issues),
+      where: s.linear_issue_id == ^linear_issue_id and i.enabled == true,
+      preload: [account: a]
+  end
+
   @doc """
   Creates a issue_sync.
   """
