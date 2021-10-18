@@ -369,7 +369,7 @@ defmodule Linear.ActionsTest do
   end
 
   describe "FetchLinearIssue" do
-    test "ok: fetches a linear issue by issue id number", context do
+    test "ok: fetches a linear issue by issue key", context do
       action =
         Actions.FetchLinearIssue.new(%{
           issue_key: "TST-93"
@@ -386,13 +386,20 @@ defmodule Linear.ActionsTest do
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
     end
 
-    test "ok: fetches a linear issue by inferred issue key", context do
+    test "ok: fetches a linear issue by inferred issue id", context do
       action =
         Actions.FetchLinearIssue.new()
 
       issue_id = Ecto.UUID.generate()
 
-      expect_linear_call(:issue, 1, fn _session, "TST-93" ->
+      shared_issue =
+        context.shared_issue
+        |> Ecto.Changeset.change(linear_issue_id: issue_id, linear_issue_number: 93)
+        |> Linear.Repo.update!()
+
+      context = %{context | shared_issue: shared_issue}
+
+      expect_linear_call(:issue, 1, fn _session, ^issue_id ->
         {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
       end)
 

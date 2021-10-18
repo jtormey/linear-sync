@@ -3,16 +3,17 @@ defmodule Linear.Actions.FetchLinearIssue do
   alias Linear.LinearAPI
   alias Linear.LinearQuery
   alias Linear.LinearAPI.LinearData, as: Ln
-  alias Linear.Synchronize.ContentWriter
 
   @enforce_keys []
-  defstruct [:issue_key]
+  defstruct [:issue_id, :issue_key]
 
   def new(fields \\ %{}), do: struct(__MODULE__, fields)
 
   def process(%__MODULE__{} = action, %{issue_sync: issue_sync} = context) do
-    with nil <- action.issue_key,
-         nil <- ContentWriter.linear_issue_key(context.linear_issue, brackets: false) do
+    with nil <- action.issue_id,
+         nil <- action.issue_key,
+         nil <- context.shared_issue.linear_issue_id,
+         nil <- context.linear_issue.id do
       {:error, :missing_issue_key}
     else
       issue_key when is_binary(issue_key) ->
