@@ -1,7 +1,10 @@
 defmodule Linear.Actions.Helpers do
+  import Ecto.Query, warn: false
+
   alias Linear.Repo
   alias Linear.GithubAPI
   alias Linear.Data.IssueSync
+  alias Linear.Data.SharedIssue
   alias Linear.GithubAPI.GithubData, as: Gh
   alias Linear.LinearAPI.LinearData, as: Ln
 
@@ -59,6 +62,18 @@ defmodule Linear.Actions.Helpers do
     do: {:error, :invalid_constraint}
 
   def handle_constraint_error({:ok, _struct} = value), do: value
+
+  @doc """
+  """
+  def delete_existing_shared_issue(%Gh.Issue{} = github_issue) do
+    Repo.delete_all(from s in SharedIssue, where: s.github_issue_id == ^github_issue.id)
+    :ok
+  end
+
+  def delete_existing_shared_issue(%Ln.Issue{} = linear_issue) do
+    Repo.delete_all(from s in SharedIssue, where: s.linear_issue_id == ^linear_issue.id)
+    :ok
+  end
 
   defmodule Labels do
     @doc """

@@ -5,7 +5,7 @@ defmodule Linear.Actions.FetchLinearIssue do
   alias Linear.LinearAPI.LinearData, as: Ln
 
   @enforce_keys []
-  defstruct [:issue_id, :issue_key]
+  defstruct [:issue_id, :issue_key, replace_shared_issue: false]
 
   def new(fields \\ %{}), do: struct(__MODULE__, fields)
 
@@ -24,6 +24,10 @@ defmodule Linear.Actions.FetchLinearIssue do
         case LinearQuery.get_issue_by_id(session, issue_key) do
           {:ok, linear_issue_data} ->
             linear_issue = Ln.Issue.new(linear_issue_data)
+
+            if action.replace_shared_issue do
+              :ok = Helpers.delete_existing_shared_issue(linear_issue)
+            end
 
             context.shared_issue
             |> Helpers.update_shared_issue(linear_issue)
