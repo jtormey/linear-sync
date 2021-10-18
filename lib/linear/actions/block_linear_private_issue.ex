@@ -11,6 +11,8 @@ defmodule Linear.Actions.BlockLinearPrivateIssue do
 
   def new(fields \\ %{}), do: struct(__MODULE__, fields)
 
+  def requires?(dep), do: dep == :linear
+
   def process(%__MODULE__{}, context) do
     case fetch_labels(context) do
       {:ok, labels} ->

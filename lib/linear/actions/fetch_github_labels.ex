@@ -9,6 +9,8 @@ defmodule Linear.Actions.FetchGithubLabels do
 
   def new(fields \\ %{}), do: struct(__MODULE__, fields)
 
+  def requires?(dep), do: dep == :github
+
   def process(%__MODULE__{}, %{issue_sync: issue_sync} = context) do
     {client, repo_key} = Helpers.client_repo_key(issue_sync)
 

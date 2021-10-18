@@ -5,6 +5,8 @@ defmodule Linear.Actions.Helpers do
   alias Linear.GithubAPI.GithubData, as: Gh
   alias Linear.LinearAPI.LinearData, as: Ln
 
+  @doc """
+  """
   def client_repo_key(%IssueSync{} = issue_sync) do
     issue_sync = Repo.preload(issue_sync, :account)
     {GithubAPI.client(issue_sync.account), GithubAPI.to_repo_key!(issue_sync)}
@@ -15,6 +17,8 @@ defmodule Linear.Actions.Helpers do
     Application.get_env(:linear, :github_api, GithubAPI)
   end
 
+  @doc """
+  """
   def combine_actions(actions) do
     Enum.flat_map(List.wrap(actions), fn
       nil ->
@@ -25,14 +29,36 @@ defmodule Linear.Actions.Helpers do
     end)
   end
 
-  def update_shared_issue!(shared_issue, %Ln.Issue{} = linear_issue) do
+  @doc """
+  """
+  def update_shared_issue(shared_issue, %Gh.Issue{} = github_issue) do
+    shared_issue
+    |> Ecto.Changeset.change(
+      github_issue_id: github_issue.id,
+      github_issue_number: github_issue.number
+    )
+    |> Ecto.Changeset.unique_constraint(:github_issue_id)
+    |> Repo.update()
+    |> handle_constraint_error()
+  end
+
+  def update_shared_issue(shared_issue, %Ln.Issue{} = linear_issue) do
     shared_issue
     |> Ecto.Changeset.change(
       linear_issue_id: linear_issue.id,
       linear_issue_number: linear_issue.number
     )
-    |> Repo.update!()
+    |> Ecto.Changeset.unique_constraint(:linear_issue_id)
+    |> Repo.update()
+    |> handle_constraint_error()
   end
+
+  @doc """
+  """
+  def handle_constraint_error({:error, %Ecto.Changeset{}}),
+    do: {:error, :invalid_constraint}
+
+  def handle_constraint_error({:ok, _struct} = value), do: value
 
   defmodule Labels do
     @doc """

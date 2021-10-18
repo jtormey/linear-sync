@@ -12,6 +12,8 @@ defmodule Linear.Actions.CreateLinearIssue do
 
   def new(fields), do: struct(__MODULE__, fields)
 
+  def requires?(_any), do: false
+
   def process(%__MODULE__{} = action, %{issue_sync: issue_sync} = context) do
     session = LinearAPI.Session.new(issue_sync.account)
 
@@ -31,15 +33,20 @@ defmodule Linear.Actions.CreateLinearIssue do
       {:ok, linear_issue_data} ->
         linear_issue = Ln.Issue.new(linear_issue_data)
 
-        context =
-          context
-          |> Map.update!(
-            :shared_issue,
-            &Helpers.update_shared_issue!(&1, linear_issue)
-          )
-          |> Map.put(:linear_issue, linear_issue)
+        context.shared_issue
+        |> Helpers.update_shared_issue(linear_issue)
+        |> case do
+          {:ok, shared_issue} ->
+            context =
+              context
+              |> Map.put(:shared_issue, shared_issue)
+              |> Map.put(:linear_issue, linear_issue)
 
-        {:cont, {context, next_actions(context)}}
+            {:cont, {context, next_actions(context)}}
+
+          {:error, reason} ->
+            {:error, {:create_linear_issue, reason}}
+        end
 
       :error ->
         {:error, :create_linear_issue}

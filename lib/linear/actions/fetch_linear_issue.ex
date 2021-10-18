@@ -9,6 +9,8 @@ defmodule Linear.Actions.FetchLinearIssue do
 
   def new(fields \\ %{}), do: struct(__MODULE__, fields)
 
+  def requires?(_any), do: false
+
   def process(%__MODULE__{} = action, %{issue_sync: issue_sync} = context) do
     with nil <- action.issue_id,
          nil <- action.issue_key,
@@ -23,15 +25,20 @@ defmodule Linear.Actions.FetchLinearIssue do
           {:ok, linear_issue_data} ->
             linear_issue = Ln.Issue.new(linear_issue_data)
 
-            context =
-              context
-              |> Map.update!(
-                :shared_issue,
-                &Helpers.update_shared_issue!(&1, linear_issue)
-              )
-              |> Map.put(:linear_issue, linear_issue)
+            context.shared_issue
+            |> Helpers.update_shared_issue(linear_issue)
+            |> case do
+              {:ok, shared_issue} ->
+                context =
+                  context
+                  |> Map.put(:shared_issue, shared_issue)
+                  |> Map.put(:linear_issue, linear_issue)
 
-            {:ok, context}
+                {:ok, context}
+
+              {:error, reason} ->
+                {:error, {:fetch_linear_issue, reason}}
+            end
 
           :error ->
             {:error, :fetch_linear_issue}

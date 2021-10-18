@@ -7,6 +7,8 @@ defmodule Linear.Actions.CreateLinearComment do
 
   def new(fields), do: struct(__MODULE__, fields)
 
+  def requires?(dep), do: dep == :linear
+
   def process(%__MODULE__{} = action, %{issue_sync: issue_sync} = context) do
     session = LinearAPI.Session.new(issue_sync.account)
 
