@@ -3,7 +3,6 @@ defmodule Linear.Data.SharedIssue do
   import Ecto.Changeset
 
   alias Linear.Data.IssueSync
-  alias Linear.Data.SharedComment
   alias Linear.Synchronize.Event
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -20,7 +19,6 @@ defmodule Linear.Data.SharedIssue do
 
     # Associations
     belongs_to :issue_sync, IssueSync
-    has_many :shared_comments, SharedComment
 
     timestamps(type: :utc_datetime)
   end
