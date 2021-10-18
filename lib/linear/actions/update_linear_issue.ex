@@ -14,6 +14,18 @@ defmodule Linear.Actions.UpdateLinearIssue do
   def process(%__MODULE__{} = action, %{issue_sync: issue_sync} = context) do
     session = LinearAPI.Session.new(issue_sync.account)
 
+    args = update_issue_args(action, context)
+
+    case LinearQuery.update_issue(session, context.shared_issue.linear_issue_id, args) do
+      :ok ->
+        {:ok, context}
+
+      :error ->
+        {:error, :update_linear_issue}
+    end
+  end
+
+  defp update_issue_args(%__MODULE__{state_id: nil} = action, context) do
     labels_to_add =
       action.add_labels
       |> Enum.map(&Helpers.Labels.get_corresponding_linear_label(&1, context.linear_labels))
@@ -34,17 +46,10 @@ defmodule Linear.Actions.UpdateLinearIssue do
 
     labels_changed? = updated_label_ids != current_label_ids
 
-    args =
-      []
-      |> Util.Control.put_non_nil(:stateId, action.state_id)
-      |> Util.Control.put_if(:labelIds, MapSet.to_list(updated_label_ids), labels_changed?)
+    Util.Control.put_if([], :labelIds, MapSet.to_list(updated_label_ids), labels_changed?)
+  end
 
-    case LinearQuery.update_issue(session, context.shared_issue.linear_issue_id, args) do
-      :ok ->
-        {:ok, context}
-
-      :error ->
-        {:error, :update_linear_issue}
-    end
+  defp update_issue_args(%__MODULE__{} = action, _context) do
+    Util.Control.put_non_nil([], :stateId, action.state_id)
   end
 end

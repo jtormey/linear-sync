@@ -102,6 +102,9 @@ defmodule Linear.Actions.Helpers do
       }
     end
 
+    def get_updated_linear_labels(_otherwise),
+      do: %{added_label_ids: [], removed_label_ids: []}
+
     @doc """
     Checks if two labels are equal, uses a case-insensitive comparison.
     """
