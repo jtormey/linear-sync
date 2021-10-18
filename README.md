@@ -2,6 +2,16 @@
 
 Syncs GitHub issues and comments with linear.app
 
+The following data are synced:
+
+| From | To | Notes |
+| ---- | -- | ----- |
+| **GitHub** issue open | **Linear** new issue with `[Open Status]` | Includes author, title, and description at creation. Select an `[Open Status]` on the web UI, and optionally a default assignee and label. |
+| **GitHub** issue close | **Linear** issue status set to `[Closed Status]` | Select a `[Closed Status]` on the web UI |
+| **GitHub** label | **Linear** label | A label with the same name must exist on Linear |
+| **GitHub** comment | **Linear** comment | |
+| **Linear** comment | **GitHub** comment | |
+
 ## Development
 
 Environment requirements:
