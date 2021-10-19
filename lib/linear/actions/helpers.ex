@@ -91,6 +91,22 @@ defmodule Linear.Actions.Helpers do
     end
 
     @doc """
+    Returns a map with the added and removed state ids, or `nil` if state was not updated.
+    """
+    def get_updated_linear_state(%{
+      "data" => %{"stateId" => added_state_id},
+      "updatedFrom" => %{"stateId" => removed_state_id}
+    }) do
+      %{
+        added_state_id: added_state_id,
+        removed_state_id: removed_state_id
+      }
+    end
+
+    def get_updated_linear_state(_otherwise), do: nil
+
+    @doc """
+    Returns a map of added and removed label ids, or `nil` if none were updated.
     """
     def get_updated_linear_labels(%{
       "data" => %{"labelIds" => current_label_ids},
@@ -102,8 +118,7 @@ defmodule Linear.Actions.Helpers do
       }
     end
 
-    def get_updated_linear_labels(_otherwise),
-      do: %{added_label_ids: [], removed_label_ids: []}
+    def get_updated_linear_labels(_otherwise), do: nil
 
     @doc """
     Checks if two labels are equal, uses a case-insensitive comparison.

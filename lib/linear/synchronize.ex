@@ -104,6 +104,7 @@ defmodule Linear.Synchronize do
       action: :updated_issue,
       data: %{
         linear_issue: Ln.Issue.new(ln_issue),
+        linear_state_diff: Actions.Helpers.Labels.get_updated_linear_state(params),
         linear_labels_diff: Actions.Helpers.Labels.get_updated_linear_labels(params)
       }
     }

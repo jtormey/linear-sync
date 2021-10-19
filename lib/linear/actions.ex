@@ -118,14 +118,34 @@ defmodule Linear.Actions do
   def for_event(%Event{source: :linear, action: :updated_issue} = event, context) do
     if context.issue_sync.sync_linear_to_github do
       [
-        Actions.FetchLinearLabels.new(),
-        Actions.FetchGithubLabels.new(),
-        Actions.AddGithubLabels.new(%{
-          label_ids: event.data.linear_labels_diff.added_label_ids
-        }),
-        Actions.RemoveGithubLabels.new(%{
-          label_ids: event.data.linear_labels_diff.removed_label_ids
-        })
+        with %{open_state_id: state_id} <- context.issue_sync,
+             %{added_state_id: ^state_id} <- event.data.linear_state_diff do
+          Actions.UpdateGithubIssue.new(%{
+            state: :opened
+          })
+        else
+          _otherwise -> nil
+        end,
+        with %{close_state_id: state_id} <- context.issue_sync,
+             %{added_state_id: ^state_id} <- event.data.linear_state_diff do
+          Actions.UpdateGithubIssue.new(%{
+            state: :closed
+          })
+        else
+          _otherwise -> nil
+        end,
+        if event.data.linear_labels_diff do
+          [
+            Actions.FetchLinearLabels.new(),
+            Actions.FetchGithubLabels.new(),
+            Actions.AddGithubLabels.new(%{
+              label_ids: event.data.linear_labels_diff.added_label_ids
+            }),
+            Actions.RemoveGithubLabels.new(%{
+              label_ids: event.data.linear_labels_diff.removed_label_ids
+            })
+          ]
+        end
       ]
     end
   end
