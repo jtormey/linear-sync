@@ -47,6 +47,12 @@ defmodule Linear.Actions do
     end
   end
 
+  def for_event(%Event{source: :github, action: :reopened_issue}, context) do
+    Actions.UpdateLinearIssue.new(%{
+      state_id: context.issue_sync.open_state_id
+    })
+  end
+
   def for_event(%Event{source: :github, action: :closed_issue}, context) do
     if not context.issue_sync.close_on_open do
       Actions.UpdateLinearIssue.new(%{

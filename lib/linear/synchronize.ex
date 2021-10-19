@@ -24,6 +24,18 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
+  def handle_incoming(:github, %{"action" => "reopened", "repository" => gh_repo} = params) do
+    %Event{
+      source: :github,
+      action: :reopened_issue,
+      data: %{
+        github_repo: Gh.Repo.new(gh_repo),
+        github_issue: Gh.Issue.new(params["issue"] || params["pull_request"])
+      }
+    }
+    |> SyncEngine.handle_event()
+  end
+
   def handle_incoming(:github, %{"action" => "closed", "repository" => gh_repo} = params) do
     %Event{
       source: :github,
