@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 System.put_env("NODE_ENV", "development")
 

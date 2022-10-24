@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 ngrok_host = "000000000000.ngrok.io"
 
