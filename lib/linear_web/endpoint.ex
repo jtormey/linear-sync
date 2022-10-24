@@ -7,14 +7,11 @@ defmodule LinearWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_linear_key",
-    signing_salt: "FdJju97z"
+    signing_salt: "EQqiEz2V",
+    same_site: "Lax"
   ]
 
   @session_max_age 365 * 86400
-
-  socket "/socket", LinearWeb.UserSocket,
-    websocket: true,
-    longpoll: false
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
@@ -26,7 +23,7 @@ defmodule LinearWeb.Endpoint do
     at: "/",
     from: :linear,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: LinearWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
@@ -36,10 +33,6 @@ defmodule LinearWeb.Endpoint do
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :linear
   end
-
-  plug Phoenix.LiveDashboard.RequestLogger,
-    param_key: "request_logger",
-    cookie_key: "request_logger"
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]

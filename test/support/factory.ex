@@ -15,7 +15,7 @@ defmodule Linear.Factory do
       external_id: Ecto.UUID.generate(),
 
       # Github
-      repo_id: 200001,
+      repo_id: 200_001,
       repo_owner: "test-owner",
       repo_name: "test-repo",
 
@@ -44,7 +44,7 @@ defmodule Linear.Factory do
       linear_issue_number: 93,
 
       # Github
-      github_issue_id: 100001,
+      github_issue_id: 100_001,
       github_issue_number: 101,
 
       # Associations

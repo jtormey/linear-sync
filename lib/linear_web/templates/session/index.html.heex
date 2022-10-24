@@ -8,8 +8,11 @@
 
       <%= form_for @changeset, Routes.session_path(@conn, :create), fn f -> %>
         <div class="mb-4">
-          <%= password_input f, :api_key, class: "el-input focus:shadow-outline-gray", placeholder: "Enter a Linear API key..." %>
-          <%= error_tag f, :api_key %>
+          <%= password_input(f, :api_key,
+            class: "el-input focus:shadow-outline-gray",
+            placeholder: "Enter a Linear API key..."
+          ) %>
+          <%= error_tag(f, :api_key) %>
         </div>
         <button type="submit" name="button" class="el-button">
           Continue with API key
@@ -25,11 +28,17 @@
         LinearSync sends GitHub issues to Linear.
       </p>
       <p class="mt-4 text-base text-dark-500">
-        This lets open source maintainers better integrate community feedback into the <a href="https://linear.app/linear-method" class="text-dark-600 underline font-bold">Linear Method</a>.
+        This lets open source maintainers better integrate community feedback into the <a
+          href="https://linear.app/linear-method"
+          class="text-dark-600 underline font-bold"
+        >Linear Method</a>.
       </p>
       <p class="mt-4 text-base text-dark-500">
         Made by <a href="https://github.com/jtormey" class="text-dark-600 underline font-bold">@jtormey</a>, with the help of Elixir and Phoenix.
-        View the full source code <a href="https://github.com/jtormey/linear-sync" class="text-dark-600 underline font-bold">on GitHub</a>.
+        View the full source code <a
+          href="https://github.com/jtormey/linear-sync"
+          class="text-dark-600 underline font-bold"
+        >on GitHub</a>.
       </p>
       <p class="mt-4 text-base text-dark-500">
         Special thanks to the great folks over at Linear and GitHub for the amazing platforms they've built.

@@ -20,7 +20,10 @@ defmodule LinearWeb.AccountController do
         Logger.error("Failed to delete account #{inspect(account.id)} #{inspect(reason)}")
 
         conn
-        |> put_flash(:info, "Failed to delete your LinearSync account, please email justin@93software.com for assistance.")
+        |> put_flash(
+          :info,
+          "Failed to delete your LinearSync account, please email justin@93software.com for assistance."
+        )
         |> redirect(to: Routes.dashboard_path(conn, :index))
     end
   end

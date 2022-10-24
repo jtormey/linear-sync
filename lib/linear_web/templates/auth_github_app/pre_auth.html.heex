@@ -6,8 +6,9 @@
     </div>
 
     <%= form_for :info, @auth_github_path, [method: :get], fn f -> %>
-      <%= label f, :gh_target, "GitHub username or organization", class: "text-dark-500 text-sm" %>
-      <%= text_input f, :gh_target, class: "el-input focus:shadow-outline-gray mb-8" %>
-      <%= submit "Continue to installation", class: "el-button" %>
+      <%= label(f, :gh_target, "GitHub username or organization", class: "text-dark-500 text-sm") %>
+      <%= text_input(f, :gh_target, class: "el-input focus:shadow-outline-gray mb-8") %>
+      <%= submit("Continue to installation", class: "el-button") %>
     <% end %>
+  </div>
 </div>

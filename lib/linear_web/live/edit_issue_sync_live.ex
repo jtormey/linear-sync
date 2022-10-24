@@ -21,14 +21,15 @@ defmodule LinearWeb.EditIssueSyncLive do
 
       {:ok, %{"data" => %{"viewer" => viewer}}} = LinearAPI.viewer(session)
 
-      socket = socket
-      |> assign(:page_title, "Edit Issue Sync")
-      |> assign(:account, account)
-      |> assign(:session, session)
-      |> assign(:issue_sync, issue_sync)
-      |> assign(:viewer, viewer)
-      |> assign(:changeset, IssueSync.changeset(issue_sync, %{}))
-      |> load_team(issue_sync.team_id)
+      socket =
+        socket
+        |> assign(:page_title, "Edit Issue Sync")
+        |> assign(:account, account)
+        |> assign(:session, session)
+        |> assign(:issue_sync, issue_sync)
+        |> assign(:viewer, viewer)
+        |> assign(:changeset, IssueSync.changeset(issue_sync, %{}))
+        |> load_team(issue_sync.team_id)
 
       {:ok, socket}
     end

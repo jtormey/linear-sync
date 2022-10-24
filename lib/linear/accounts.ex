@@ -36,7 +36,8 @@ defmodule Linear.Accounts do
     linear_api = Application.get_env(:linear, :linear_api, LinearAPI)
 
     with nil <- Repo.get_by(Account, api_key: api_key),
-         {:ok, %{"data" => %{"organization" => %{"id" => org_id}}}} <- linear_api.organization(session) do
+         {:ok, %{"data" => %{"organization" => %{"id" => org_id}}}} <-
+           linear_api.organization(session) do
       if account = Repo.get_by(Account, organization_id: org_id) do
         account =
           account
@@ -74,7 +75,11 @@ defmodule Linear.Accounts do
   """
   def delete_account_github_link(%Account{} = account) do
     account
-    |> Ecto.Changeset.change(github_token: nil, github_link_state: nil, github_installation_id: nil)
+    |> Ecto.Changeset.change(
+      github_token: nil,
+      github_link_state: nil,
+      github_installation_id: nil
+    )
     |> Repo.update()
     |> broadcast(:github_link)
   end

@@ -11,8 +11,8 @@ defmodule Linear.GithubAPI do
   end
 
   def to_repo_key!(%{repo_owner: repo_owner, repo_name: repo_name})
-    when is_binary(repo_owner) and is_binary(repo_name),
-    do: {repo_owner, repo_name}
+      when is_binary(repo_owner) and is_binary(repo_name),
+      do: {repo_owner, repo_name}
 
   def user_id_by_username(username) when is_binary(username) do
     case Tentacat.Users.find(username) do

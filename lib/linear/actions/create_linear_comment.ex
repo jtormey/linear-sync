@@ -16,7 +16,8 @@ defmodule Linear.Actions.CreateLinearComment do
       session,
       context.shared_issue.linear_issue_id,
       body: action.body
-    ) |> case do
+    )
+    |> case do
       {:ok, _linear_comment_data} ->
         {:ok, context}
 

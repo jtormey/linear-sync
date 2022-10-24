@@ -10,8 +10,7 @@ import Config
 config :linear,
   ecto_repos: [Linear.Repo]
 
-config :linear, :generators,
-  binary_id: true
+config :linear, :generators, binary_id: true
 
 config :linear, Linear.Repo,
   migration_primary_key: [name: :id, type: :binary_id],

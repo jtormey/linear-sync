@@ -6,8 +6,14 @@
         <h1 class="text-white text-2xl ml-4 mb-1">LinearSync</h1>
       </span>
       <div class="">
-        <%= live_redirect "View webhooks", to: Routes.webhooks_path(@socket, :index), class: "el-button-slim" %>
-        <%= live_redirect "Create issue sync", to: Routes.new_issue_sync_path(@socket, :index), class: "el-button-slim" %>
+        <%= live_redirect("View webhooks",
+          to: Routes.webhooks_path(@socket, :index),
+          class: "el-button-slim"
+        ) %>
+        <%= live_redirect("Create issue sync",
+          to: Routes.new_issue_sync_path(@socket, :index),
+          class: "el-button-slim"
+        ) %>
       </div>
     </div>
 
@@ -28,15 +34,35 @@
 
               <div class="flex items-center">
                 <%= if issue_sync.enabled do %>
-                  <button type="button" name="button" class="el-button-slim" phx-click="disable" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                  <button
+                    type="button"
+                    name="button"
+                    class="el-button-slim"
+                    phx-click="disable"
+                    phx-value-issue_sync_id={issue_sync.id}
+                  >
                     Disable
                   </button>
-                  <%= live_redirect "Edit", to: Routes.edit_issue_sync_path(@socket, :index, issue_sync), class: "text-dark-500 text-sm ml-4" %>
+                  <%= live_redirect("Edit",
+                    to: Routes.edit_issue_sync_path(@socket, :index, issue_sync),
+                    class: "text-dark-500 text-sm ml-4"
+                  ) %>
                 <% else %>
-                  <button type="button" name="button" class="el-button-slim" phx-click="enable" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                  <button
+                    type="button"
+                    name="button"
+                    class="el-button-slim"
+                    phx-click="enable"
+                    phx-value-issue_sync_id={issue_sync.id}
+                  >
                     Enable
                   </button>
-                  <a href="#" class="text-red-500 text-sm ml-4" phx-click="delete" phx-value-issue_sync_id="<%= issue_sync.id %>">
+                  <a
+                    href="#"
+                    class="text-red-500 text-sm ml-4"
+                    phx-click="delete"
+                    phx-value-issue_sync_id={issue_sync.id}
+                  >
                     Delete
                   </a>
                 <% end %>
@@ -48,11 +74,15 @@
     </div>
 
     <div class="text-dark-500 text-sm">
-      <%= link "Sign out", to: Routes.session_path(@socket, :delete), method: :delete %>
+      <%= link("Sign out", to: Routes.session_path(@socket, :delete), method: :delete) %>
       <span class="mx-2">|</span>
-      <%= link "Re-link GitHub", to: Routes.auth_github_path(@socket, :relink), method: :post %>
+      <%= link("Re-link GitHub", to: Routes.auth_github_path(@socket, :relink), method: :post) %>
       <span class="mx-2">|</span>
-      <%= link "Delete account", to: Routes.account_path(@socket, :delete), method: :delete, data: [confirm: confirm_delete_message()] %>
+      <%= link("Delete account",
+        to: Routes.account_path(@socket, :delete),
+        method: :delete,
+        data: [confirm: confirm_delete_message()]
+      ) %>
     </div>
   </div>
 </div>

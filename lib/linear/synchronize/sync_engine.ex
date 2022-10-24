@@ -74,7 +74,7 @@ defmodule Linear.Synchronize.SyncEngine do
 
     should_process? =
       (not action_type.requires?(:linear) or context.shared_issue.linear_issue_id != nil) and
-      (not action_type.requires?(:github) or context.shared_issue.github_issue_id != nil)
+        (not action_type.requires?(:github) or context.shared_issue.github_issue_id != nil)
 
     if should_process? do
       action_type.process(action, context)
@@ -106,6 +106,7 @@ defmodule Linear.Synchronize.SyncEngine do
       github_issue_id: event.data.github_issue.id,
       issue_sync_id: event.issue_sync_id
     ]
+
     Repo.get_by(SharedIssue, query) |> wrap_shared_issue_result()
   end
 
@@ -114,6 +115,7 @@ defmodule Linear.Synchronize.SyncEngine do
       linear_issue_id: event.data.linear_issue.id,
       issue_sync_id: event.issue_sync_id
     ]
+
     Repo.get_by(SharedIssue, query) |> wrap_shared_issue_result()
   end
 

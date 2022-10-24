@@ -79,7 +79,7 @@ defmodule Linear.Actions.Helpers do
     @doc """
     """
     def to_label_mapset(labels) when is_list(labels) do
-      labels |> Enum.reject(& &1 == nil) |> Enum.map(& &1.id) |> MapSet.new()
+      labels |> Enum.reject(&(&1 == nil)) |> Enum.map(& &1.id) |> MapSet.new()
     end
 
     @doc """
@@ -94,9 +94,9 @@ defmodule Linear.Actions.Helpers do
     Returns a map with the added and removed state ids, or `nil` if state was not updated.
     """
     def get_updated_linear_state(%{
-      "data" => %{"stateId" => added_state_id},
-      "updatedFrom" => %{"stateId" => removed_state_id}
-    }) do
+          "data" => %{"stateId" => added_state_id},
+          "updatedFrom" => %{"stateId" => removed_state_id}
+        }) do
       %{
         added_state_id: added_state_id,
         removed_state_id: removed_state_id
@@ -109,9 +109,9 @@ defmodule Linear.Actions.Helpers do
     Returns a map of added and removed label ids, or `nil` if none were updated.
     """
     def get_updated_linear_labels(%{
-      "data" => %{"labelIds" => current_label_ids},
-      "updatedFrom" => %{"labelIds" => prev_label_ids}
-    }) do
+          "data" => %{"labelIds" => current_label_ids},
+          "updatedFrom" => %{"labelIds" => prev_label_ids}
+        }) do
       %{
         added_label_ids: current_label_ids -- prev_label_ids,
         removed_label_ids: prev_label_ids -- current_label_ids

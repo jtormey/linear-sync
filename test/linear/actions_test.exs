@@ -9,15 +9,28 @@ defmodule Linear.ActionsTest do
 
   setup do
     shared_issue = Linear.Factory.insert(:shared_issue)
+
     %{
       issue_sync: shared_issue.issue_sync,
       shared_issue: shared_issue,
       repo_key: Linear.GithubAPI.to_repo_key!(shared_issue.issue_sync),
       github_issue: Gh.Issue.new(%{"title" => "Existing github title"}),
-      github_repo_labels: [%Gh.Label{id: 30001, name: "some label"}, %Gh.Label{id: 30002, name: "existing label"}],
+      github_repo_labels: [
+        %Gh.Label{id: 30001, name: "some label"},
+        %Gh.Label{id: 30002, name: "existing label"}
+      ],
       github_issue_labels: [%Gh.Label{id: 30002, name: "existing label"}],
-      linear_issue: Ln.Issue.new(%{"title" => "Existing linear title", "number" => 93, "team" => %{"key" => "TST"}, "labels" => %{"nodes" => [%{"id" => 99, "name" => "Existing Label"}]}}),
-      linear_labels: [%Ln.Label{id: 1, name: "Some Label"}, %Ln.Label{id: 99, name: "Existing Label"}]
+      linear_issue:
+        Ln.Issue.new(%{
+          "title" => "Existing linear title",
+          "number" => 93,
+          "team" => %{"key" => "TST"},
+          "labels" => %{"nodes" => [%{"id" => 99, "name" => "Existing Label"}]}
+        }),
+      linear_labels: [
+        %Ln.Label{id: 1, name: "Some Label"},
+        %Ln.Label{id: 99, name: "Existing Label"}
+      ]
     }
   end
 
@@ -56,27 +69,28 @@ defmodule Linear.ActionsTest do
     @private_label %{"id" => 400, "name" => "Private"}
 
     test "ok: continues if an issue is not private (from context)", context do
-      action =
-        Actions.BlockLinearPrivateIssue.new()
+      action = Actions.BlockLinearPrivateIssue.new()
 
       assert {:ok, _context} = Actions.BlockLinearPrivateIssue.process(action, context)
     end
 
     test "error: fails if an issue has a private label (from context)", context do
-      action =
-        Actions.BlockLinearPrivateIssue.new()
+      action = Actions.BlockLinearPrivateIssue.new()
 
       linear_issue =
-        Ln.Issue.new(%{"title" => "Existing linear title", "labels" => %{"nodes" => [@private_label]}})
+        Ln.Issue.new(%{
+          "title" => "Existing linear title",
+          "labels" => %{"nodes" => [@private_label]}
+        })
 
       context = %{context | linear_issue: linear_issue}
 
-      assert {:error, :linear_issue_is_private} = Actions.BlockLinearPrivateIssue.process(action, context)
+      assert {:error, :linear_issue_is_private} =
+               Actions.BlockLinearPrivateIssue.process(action, context)
     end
 
     test "ok: continues if an issue is not private (from linear query)", context do
-      action =
-        Actions.BlockLinearPrivateIssue.new()
+      action = Actions.BlockLinearPrivateIssue.new()
 
       linear_issue =
         Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
@@ -92,8 +106,7 @@ defmodule Linear.ActionsTest do
     end
 
     test "error: fails if an issue has a private label (from linear query)", context do
-      action =
-        Actions.BlockLinearPrivateIssue.new()
+      action = Actions.BlockLinearPrivateIssue.new()
 
       linear_issue =
         Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
@@ -105,13 +118,13 @@ defmodule Linear.ActionsTest do
         {:ok, %{"data" => %{"issue" => %{"labels" => %{"nodes" => [@private_label]}}}}}
       end)
 
-      assert {:error, :linear_issue_is_private} = Actions.BlockLinearPrivateIssue.process(action, context)
+      assert {:error, :linear_issue_is_private} =
+               Actions.BlockLinearPrivateIssue.process(action, context)
     end
 
     @tag capture_log: true
     test "error: fails if no labels can be found", context do
-      action =
-        Actions.BlockLinearPrivateIssue.new()
+      action = Actions.BlockLinearPrivateIssue.new()
 
       linear_issue =
         Ln.Issue.new(%{"id" => context.shared_issue.id, "title" => "Existing linear title"})
@@ -123,7 +136,8 @@ defmodule Linear.ActionsTest do
         {:ok, %{"data" => %{"badResponse" => true}}}
       end)
 
-      assert {:error, :block_linear_private_issue} = Actions.BlockLinearPrivateIssue.process(action, context)
+      assert {:error, :block_linear_private_issue} =
+               Actions.BlockLinearPrivateIssue.process(action, context)
     end
   end
 
@@ -155,7 +169,7 @@ defmodule Linear.ActionsTest do
 
       expect_github_call(:create_issue, 1, fn _client, repo_key, params ->
         assert context.repo_key == repo_key
-        assert %{"title" =>  "Test title", "body" => "Test body"} = params
+        assert %{"title" => "Test title", "body" => "Test body"} = params
         {201, %{"id" => 10001, "number" => 10}, nil}
       end)
 
@@ -200,7 +214,12 @@ defmodule Linear.ActionsTest do
         refute Keyword.has_key?(args, :labelIds)
         refute Keyword.has_key?(args, :assigneeId)
 
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}
+           }
+         }}
       end)
 
       assert {:cont, {context, []}} = Actions.CreateLinearIssue.process(action, context)
@@ -238,7 +257,12 @@ defmodule Linear.ActionsTest do
         assert args[:labelIds] == [issue_sync_updates.label_id]
         assert args[:assigneeId] == issue_sync_updates.assignee_id
 
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}
+           }
+         }}
       end)
 
       assert {:cont, {context, []}} = Actions.CreateLinearIssue.process(action, context)
@@ -262,20 +286,25 @@ defmodule Linear.ActionsTest do
       context = %{context | issue_sync: issue_sync}
 
       expect_linear_call(:create_issue, 1, fn _session, _args ->
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93}}
+           }
+         }}
       end)
 
       assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
 
       assert [
-          %Linear.Actions.CreateGithubComment{
-            body: "Automatically moved to [Linear (#93)]()\n\n---\n*via LinearSync*\n"
-          },
-          %Linear.Actions.UpdateGithubIssue{
-            state: :closed
-          }
-        ] = actions
+               %Linear.Actions.CreateGithubComment{
+                 body: "Automatically moved to [Linear (#93)]()\n\n---\n*via LinearSync*\n"
+               },
+               %Linear.Actions.UpdateGithubIssue{
+                 state: :closed
+               }
+             ] = actions
     end
 
     test "ok: returns action to update github issue title when configured", context do
@@ -295,17 +324,30 @@ defmodule Linear.ActionsTest do
       context = %{context | issue_sync: issue_sync}
 
       expect_linear_call(:create_issue, 1, fn _session, _args ->
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueCreate" => %{
+               "success" => true,
+               "issue" => %{
+                 "id" => issue_id,
+                 "number" => 93,
+                 "url" => "https://linear-issue-93",
+                 "team" => %{"key" => "TST"}
+               }
+             }
+           }
+         }}
       end)
 
       assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
 
       assert [
-          %Linear.Actions.UpdateGithubIssue{
-            title: "Existing github title [TST-93]"
-          }
-        ] = actions
+               %Linear.Actions.UpdateGithubIssue{
+                 title: "Existing github title [TST-93]"
+               }
+             ] = actions
     end
 
     test "ok: returns action to update github issue status and title when configured", context do
@@ -325,34 +367,50 @@ defmodule Linear.ActionsTest do
       context = %{context | issue_sync: issue_sync}
 
       expect_linear_call(:create_issue, 1, fn _session, _args ->
-        {:ok, %{"data" => %{"issueCreate" => %{"success" => true, "issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueCreate" => %{
+               "success" => true,
+               "issue" => %{
+                 "id" => issue_id,
+                 "number" => 93,
+                 "url" => "https://linear-issue-93",
+                 "team" => %{"key" => "TST"}
+               }
+             }
+           }
+         }}
       end)
 
       assert {:cont, {context, actions}} = Actions.CreateLinearIssue.process(action, context)
       assert %{linear_issue_id: ^issue_id, linear_issue_number: 93} = context.shared_issue
 
       assert [
-          %Linear.Actions.UpdateGithubIssue{
-            title: "Existing github title [TST-93]"
-          },
-          %Linear.Actions.CreateGithubComment{
-            body: "Automatically moved to [Linear (#93)](https://linear-issue-93)\n\n---\n*via LinearSync*\n"
-          },
-          %Linear.Actions.UpdateGithubIssue{
-            state: :closed
-          }
-        ] = actions
+               %Linear.Actions.UpdateGithubIssue{
+                 title: "Existing github title [TST-93]"
+               },
+               %Linear.Actions.CreateGithubComment{
+                 body:
+                   "Automatically moved to [Linear (#93)](https://linear-issue-93)\n\n---\n*via LinearSync*\n"
+               },
+               %Linear.Actions.UpdateGithubIssue{
+                 state: :closed
+               }
+             ] = actions
     end
   end
 
   describe "FetchGithubLabels" do
     test "ok: fetches github repo and issue labels", context do
-      action =
-        Actions.FetchGithubLabels.new()
+      action = Actions.FetchGithubLabels.new()
 
       expect_github_call(:list_repository_labels, 1, fn _client, repo_key ->
         assert context.repo_key == repo_key
-        {200, [%{"id" => 30001, "name" => "some label"}, %{"id" => 30002, "name" => "existing label"}], nil}
+
+        {200,
+         [%{"id" => 30001, "name" => "some label"}, %{"id" => 30002, "name" => "existing label"}],
+         nil}
       end)
 
       expect_github_call(:list_issue_labels, 1, fn _client, repo_key, issue_number ->
@@ -361,10 +419,13 @@ defmodule Linear.ActionsTest do
         {200, [%{"id" => 30002, "name" => "existing label"}], nil}
       end)
 
-      %{github_repo_labels: github_repo_labels, github_issue_labels: github_issue_labels} = context
+      %{github_repo_labels: github_repo_labels, github_issue_labels: github_issue_labels} =
+        context
 
       assert {:ok, context} = Actions.FetchGithubLabels.process(action, context)
-      assert %{github_repo_labels: ^github_repo_labels, github_issue_labels: ^github_issue_labels} = context
+
+      assert %{github_repo_labels: ^github_repo_labels, github_issue_labels: ^github_issue_labels} =
+               context
     end
   end
 
@@ -378,7 +439,17 @@ defmodule Linear.ActionsTest do
       issue_id = Ecto.UUID.generate()
 
       expect_linear_call(:issue, 1, fn _session, "TST-93" ->
-        {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issue" => %{
+               "id" => issue_id,
+               "number" => 93,
+               "url" => "https://linear-issue-93",
+               "team" => %{"key" => "TST"}
+             }
+           }
+         }}
       end)
 
       assert {:ok, context} = Actions.FetchLinearIssue.process(action, context)
@@ -387,8 +458,7 @@ defmodule Linear.ActionsTest do
     end
 
     test "ok: fetches a linear issue by inferred issue id", context do
-      action =
-        Actions.FetchLinearIssue.new()
+      action = Actions.FetchLinearIssue.new()
 
       issue_id = Ecto.UUID.generate()
 
@@ -400,7 +470,17 @@ defmodule Linear.ActionsTest do
       context = %{context | shared_issue: shared_issue}
 
       expect_linear_call(:issue, 1, fn _session, ^issue_id ->
-        {:ok, %{"data" => %{"issue" => %{"id" => issue_id, "number" => 93, "url" => "https://linear-issue-93", "team" => %{"key" => "TST"}}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issue" => %{
+               "id" => issue_id,
+               "number" => 93,
+               "url" => "https://linear-issue-93",
+               "team" => %{"key" => "TST"}
+             }
+           }
+         }}
       end)
 
       assert {:ok, context} = Actions.FetchLinearIssue.process(action, context)
@@ -411,19 +491,28 @@ defmodule Linear.ActionsTest do
 
   describe "FetchLinearLabels" do
     test "ok: fetches all linear labels", context do
-      action =
-        Actions.FetchLinearLabels.new()
+      action = Actions.FetchLinearLabels.new()
 
       expect_linear_call(:list_issue_labels, 1, fn _session ->
-        {:ok, %{"data" => %{"issueLabels" => %{"nodes" => [%{"id" => 1, "name" => "Test label 1"}, %{"id" => 2, "name" => "Test label 2"}]}}}}
+        {:ok,
+         %{
+           "data" => %{
+             "issueLabels" => %{
+               "nodes" => [
+                 %{"id" => 1, "name" => "Test label 1"},
+                 %{"id" => 2, "name" => "Test label 2"}
+               ]
+             }
+           }
+         }}
       end)
 
       assert {:ok, context} = Actions.FetchLinearLabels.process(action, context)
 
       assert [
-          %Ln.Label{id: 1, name: "Test label 1"},
-          %Ln.Label{id: 2, name: "Test label 2"}
-        ] = context.linear_labels
+               %Ln.Label{id: 1, name: "Test label 1"},
+               %Ln.Label{id: 2, name: "Test label 2"}
+             ] = context.linear_labels
     end
   end
 
@@ -466,7 +555,7 @@ defmodule Linear.ActionsTest do
       expect_github_call(:update_issue, 1, fn _client, repo_key, issue_number, params ->
         assert context.repo_key == repo_key
         assert context.shared_issue.github_issue_number == issue_number
-        assert %{"title" =>  "Updated title"} = params
+        assert %{"title" => "Updated title"} = params
         {200, nil, nil}
       end)
 
@@ -497,7 +586,9 @@ defmodule Linear.ActionsTest do
     test "ok: adds a github label to a linear issue", context do
       action =
         Actions.UpdateLinearIssue.new(%{
-          add_labels: [%Gh.Label{id: 30001, name: "some label", color: "#ffffff", description: ""}]
+          add_labels: [
+            %Gh.Label{id: 30001, name: "some label", color: "#ffffff", description: ""}
+          ]
         })
 
       expect_linear_call(:update_issue, 1, fn _session, args ->
@@ -512,7 +603,9 @@ defmodule Linear.ActionsTest do
     test "ok: removes a github label from a linear issue", context do
       action =
         Actions.UpdateLinearIssue.new(%{
-          remove_labels: [%Gh.Label{id: 30002, name: "existing label", color: "#ffffff", description: ""}]
+          remove_labels: [
+            %Gh.Label{id: 30002, name: "existing label", color: "#ffffff", description: ""}
+          ]
         })
 
       expect_linear_call(:update_issue, 1, fn _session, args ->

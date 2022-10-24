@@ -1,3 +1,5 @@
-defmodule LinearWeb.ComponentView do
-  use LinearWeb, :view
+defmodule LinearWeb.ComponentHTML do
+  use LinearWeb, :html
+
+  embed_templates "../templates/component/*"
 end

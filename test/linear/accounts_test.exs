@@ -10,8 +10,7 @@ defmodule Linear.AccountsTest do
   @api_key_also_valid "3fba2e3ed573ffe26eaf0582c8c8713b"
 
   def account_fixture() do
-    {:ok, account} =
-      Accounts.find_or_create_account(@api_key)
+    {:ok, account} = Accounts.find_or_create_account(@api_key)
 
     account
   end

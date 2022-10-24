@@ -10,8 +10,7 @@ config :linear, Linear.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
-config :linear, LinearWeb.Endpoint,
-  url: [scheme: "https", host: ngrok_host, port: 443]
+config :linear, LinearWeb.Endpoint, url: [scheme: "https", host: ngrok_host, port: 443]
 
 config :oauth2, debug: true
 

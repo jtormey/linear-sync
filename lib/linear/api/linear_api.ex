@@ -13,7 +13,8 @@ defmodule Linear.LinearAPI do
   alias GraphqlBuilder.Query
   alias __MODULE__.Session
 
-  @timeout 15_000 # 15s
+  # 15s
+  @timeout 15_000
   @base_url "https://api.linear.app"
 
   @impl __MODULE__.Behaviour
@@ -27,7 +28,8 @@ defmodule Linear.LinearAPI do
         members: [nodes: [:id, :name, :displayName]]
       ]
     }
-    graphql session, GraphqlBuilder.query(query)
+
+    graphql(session, GraphqlBuilder.query(query))
   end
 
   @impl __MODULE__.Behaviour
@@ -36,7 +38,8 @@ defmodule Linear.LinearAPI do
       operation: :viewer,
       fields: [:id, :name, :email]
     }
-    graphql session, GraphqlBuilder.query(query)
+
+    graphql(session, GraphqlBuilder.query(query))
   end
 
   @impl __MODULE__.Behaviour
@@ -45,7 +48,8 @@ defmodule Linear.LinearAPI do
       operation: :organization,
       fields: [:id, :name]
     }
-    graphql session, GraphqlBuilder.query(query)
+
+    graphql(session, GraphqlBuilder.query(query))
   end
 
   @impl __MODULE__.Behaviour
@@ -54,12 +58,13 @@ defmodule Linear.LinearAPI do
       operation: :teams,
       fields: [nodes: [:id, :name]]
     }
-    graphql session, GraphqlBuilder.query(query)
+
+    graphql(session, GraphqlBuilder.query(query))
   end
 
   @impl __MODULE__.Behaviour
   def viewer_teams(session = %Session{}) do
-    graphql session, """
+    graphql(session, """
     query {
       viewer {
         id
@@ -73,7 +78,7 @@ defmodule Linear.LinearAPI do
         }
       }
     }
-    """
+    """)
   end
 
   @impl __MODULE__.Behaviour
@@ -95,8 +100,8 @@ defmodule Linear.LinearAPI do
       }
     }
     """
-    graphql session, query,
-      variables: [id: issue_id]
+
+    graphql(session, query, variables: [id: issue_id])
   end
 
   @impl __MODULE__.Behaviour
@@ -120,8 +125,11 @@ defmodule Linear.LinearAPI do
       }
     }
     """
-    graphql session, query,
-      variables: Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds, :assigneeId])
+
+    graphql(session, query,
+      variables:
+        Keyword.take(opts, [:teamId, :title, :description, :stateId, :labelIds, :assigneeId])
+    )
   end
 
   @impl __MODULE__.Behaviour
@@ -137,8 +145,8 @@ defmodule Linear.LinearAPI do
       }
     }
     """
-    graphql session, query,
-      variables: Keyword.take(opts, [:issueId, :body])
+
+    graphql(session, query, variables: Keyword.take(opts, [:issueId, :body]))
   end
 
   @impl __MODULE__.Behaviour
@@ -157,42 +165,47 @@ defmodule Linear.LinearAPI do
       }
     }
     """
-    graphql session, query,
-      variables: Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds, :assigneeId])
+
+    graphql(session, query,
+      variables:
+        Keyword.take(opts, [:issueId, :title, :description, :stateId, :labelIds, :assigneeId])
+    )
   end
 
   @impl __MODULE__.Behaviour
   def create_webhook(session = %Session{}, opts) do
-    resourceTypes = [resourceTypes: ["Comment","Issue"]]
+    resourceTypes = [resourceTypes: ["Comment", "Issue"]]
     opts = Keyword.merge(opts, resourceTypes)
+
     query = %Query{
       operation: :webhookCreate,
       variables: [input: Keyword.take(opts, [:url, :teamId, :resourceTypes])],
       fields: [:success, webhook: [:id, :enabled]]
     }
-    graphql session, GraphqlBuilder.mutation(query)
+
+    graphql(session, GraphqlBuilder.mutation(query))
   end
 
   @impl __MODULE__.Behaviour
   def get_webhooks(session = %Session{}) do
-    graphql session, """
-      query {
-        teams {
-          nodes {
-            webhooks {
-              nodes {
-                id
-                url
-                enabled
-                creator {
-                  name
-                }
+    graphql(session, """
+    query {
+      teams {
+        nodes {
+          webhooks {
+            nodes {
+              id
+              url
+              enabled
+              creator {
+                name
               }
             }
           }
         }
       }
-      """
+    }
+    """)
   end
 
   @impl __MODULE__.Behaviour
@@ -202,12 +215,13 @@ defmodule Linear.LinearAPI do
       variables: Keyword.take(opts, [:id]),
       fields: [:success]
     }
-    graphql session, GraphqlBuilder.mutation(query)
+
+    graphql(session, GraphqlBuilder.mutation(query))
   end
 
   @impl __MODULE__.Behaviour
   def list_issue_labels(session = %Session{}) do
-    graphql session, """
+    graphql(session, """
     query {
       issueLabels {
         nodes {
@@ -216,13 +230,13 @@ defmodule Linear.LinearAPI do
         }
       }
     }
-    """
+    """)
   end
 
   defp graphql(session = %Session{}, query, opts \\ []) when is_binary(query) do
     variables = Keyword.get(opts, :variables, []) |> Map.new()
 
-    Logger.debug("Running graphql query #{query} with variables #{inspect variables}")
+    Logger.debug("Running graphql query #{query} with variables #{inspect(variables)}")
 
     headers = [
       {"Content-Type", "application/json"},

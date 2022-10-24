@@ -12,7 +12,9 @@ defmodule Linear.Repo.Migrations.CreateLnComments do
     create table(:ln_comments) do
       add :body, :text, null: false
       add :github_comment_id, :integer, null: false
-      add :ln_issue_id, references(:ln_issues, on_delete: :delete_all, type: :binary_id), null: false
+
+      add :ln_issue_id, references(:ln_issues, on_delete: :delete_all, type: :binary_id),
+        null: false
 
       timestamps()
     end

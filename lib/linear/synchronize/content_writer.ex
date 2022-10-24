@@ -60,7 +60,7 @@ defmodule Linear.Synchronize.ContentWriter do
   def linear_issue_key(ln_issue, opts \\ [])
 
   def linear_issue_key(%Ln.Issue{team: %Ln.Team{key: team_key}, number: number}, opts)
-    when not is_nil(team_key) and not is_nil(number) do
+      when not is_nil(team_key) and not is_nil(number) do
     issue_key = "#{team_key}-#{number}"
     if Keyword.get(opts, :brackets, true), do: "[#{issue_key}]", else: issue_key
   end

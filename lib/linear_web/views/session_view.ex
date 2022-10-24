@@ -1,3 +1,5 @@
-defmodule LinearWeb.SessionView do
-  use LinearWeb, :view
+defmodule LinearWeb.SessionHTML do
+  use LinearWeb, :html
+
+  embed_templates "../templates/session/*"
 end

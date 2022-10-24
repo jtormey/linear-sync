@@ -18,7 +18,6 @@ config :linear, LinearWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-
 config :linear, :linear_api, Linear.LinearAPIMock
 config :linear, :github_api, Linear.GithubAPIMock
 

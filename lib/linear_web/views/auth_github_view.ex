@@ -1,3 +1,5 @@
-defmodule LinearWeb.AuthGithubView do
-  use LinearWeb, :view
+defmodule LinearWeb.AuthGithubHTML do
+  use LinearWeb, :html
+
+  embed_templates "../templates/auth_github/*"
 end

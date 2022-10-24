@@ -37,7 +37,11 @@ defmodule LinearWeb.AuthGithubAppController do
     |> redirect(to: Routes.auth_github_path(conn, :done))
   end
 
-  def callback(conn, %{"code" => code, "installation_id" => installation_id, "setup_action" => _action}) do
+  def callback(conn, %{
+        "code" => code,
+        "installation_id" => installation_id,
+        "setup_action" => _action
+      }) do
     case session_account(conn) do
       %Account{} = account ->
         %{token: %{access_token: access_token}} = Auth.GithubApp.get_token!(code: code)

@@ -1,5 +1,5 @@
 <div class="text-dark-600 my-4">
-  <%= live_redirect "← Back to account", to: Routes.dashboard_path(@socket, :index) %>
+  <%= live_redirect("← Back to account", to: Routes.dashboard_path(@socket, :index)) %>
 </div>
 
 <div class="w-full sm:w-1/2 mx-auto mt-16">
@@ -32,7 +32,10 @@
               <div>
                 <div class="el-button-slim w-auto flex items-center">
                   <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
-                  <%= length linear_webhook.issue_syncs %> active <%= Inflex.inflect "sync", length(linear_webhook.issue_syncs) %>
+                  <%= length(linear_webhook.issue_syncs) %> active <%= Inflex.inflect(
+                    "sync",
+                    length(linear_webhook.issue_syncs)
+                  ) %>
                 </div>
               </div>
             </div>
@@ -72,7 +75,10 @@
               <div>
                 <div class="el-button-slim w-auto flex items-center">
                   <div class="bg-green-500 w-2 h-2 rounded-full mr-3"></div>
-                  <%= length github_webhook.issue_syncs %> active <%= Inflex.inflect "sync", length(github_webhook.issue_syncs) %>
+                  <%= length(github_webhook.issue_syncs) %> active <%= Inflex.inflect(
+                    "sync",
+                    length(github_webhook.issue_syncs)
+                  ) %>
                 </div>
               </div>
             </div>
@@ -90,5 +96,4 @@
       </ul>
     <% end %>
   </div>
-
 </div>

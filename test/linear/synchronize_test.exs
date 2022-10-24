@@ -89,7 +89,10 @@ defmodule Linear.SynchronizeTest do
         {:ok, make_ln_success("issueCreate", "issue", make_ln_issue())}
       end)
 
-      expect(Linear.GithubAPIMock, :create_issue_comment, 1, fn _client, repo_key, issue_number, body ->
+      expect(Linear.GithubAPIMock, :create_issue_comment, 1, fn _client,
+                                                                repo_key,
+                                                                issue_number,
+                                                                body ->
         assert {"test_owner", "test_repo"} = repo_key
         assert 2 == issue_number
         assert body =~ "Automatically moved to [Linear (#3)]"

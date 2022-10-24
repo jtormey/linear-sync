@@ -33,7 +33,8 @@ defmodule Linear.Actions do
 
         if create_linear_issue? do
           Actions.CreateLinearIssue.new(%{
-            title: ContentWriter.linear_issue_title(event.data.github_repo, event.data.github_issue),
+            title:
+              ContentWriter.linear_issue_title(event.data.github_repo, event.data.github_issue),
             body: ContentWriter.linear_issue_body(event.data.github_repo, event.data.github_issue)
           })
         end
@@ -41,8 +42,11 @@ defmodule Linear.Actions do
       [issue_key] ->
         handle_existing_linear_issue.(issue_key)
 
-      [issue_key | _rest]->
-        Logger.warn("Multiple linear issue keys per github issue not supported, using the first found")
+      [issue_key | _rest] ->
+        Logger.warn(
+          "Multiple linear issue keys per github issue not supported, using the first found"
+        )
+
         handle_existing_linear_issue.(issue_key)
     end
   end
@@ -62,8 +66,7 @@ defmodule Linear.Actions do
   end
 
   def for_event(%Event{source: :github, action: :created_comment} = event, _context) do
-    create_linear_comment? =
-      not ContentWriter.via_linear_sync?(event.data.github_comment.body)
+    create_linear_comment? = not ContentWriter.via_linear_sync?(event.data.github_comment.body)
 
     if create_linear_comment? do
       Actions.CreateLinearComment.new(%{

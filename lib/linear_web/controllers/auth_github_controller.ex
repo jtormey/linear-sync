@@ -9,7 +9,10 @@ defmodule LinearWeb.AuthGithubController do
     case session_account(conn) do
       %Account{} = account ->
         state = Ecto.UUID.generate()
-        {:ok, _account} = Accounts.update_account_github_link(account, %{github_link_state: state})
+
+        {:ok, _account} =
+          Accounts.update_account_github_link(account, %{github_link_state: state})
+
         redirect(conn, external: Auth.Github.authorize_url!(state))
 
       _otherwise ->
@@ -29,7 +32,13 @@ defmodule LinearWeb.AuthGithubController do
     case session_account(conn) do
       %Account{github_link_state: ^state} = account ->
         %{token: %{access_token: access_token}} = Auth.Github.get_token!(code: code)
-        {:ok, _account} = Accounts.update_account_github_link(account, %{github_token: access_token, github_link_state: nil})
+
+        {:ok, _account} =
+          Accounts.update_account_github_link(account, %{
+            github_token: access_token,
+            github_link_state: nil
+          })
+
         redirect(conn, to: Routes.auth_github_path(conn, :done))
 
       nil ->

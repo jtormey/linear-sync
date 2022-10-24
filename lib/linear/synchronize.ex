@@ -48,7 +48,12 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
-  def handle_incoming(:github, %{"action" => "created", "comment" => gh_comment, "issue" => gh_issue, "repository" => gh_repo}) do
+  def handle_incoming(:github, %{
+        "action" => "created",
+        "comment" => gh_comment,
+        "issue" => gh_issue,
+        "repository" => gh_repo
+      }) do
     %Event{
       source: :github,
       action: :created_comment,
@@ -61,7 +66,10 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
-  def handle_incoming(:github, %{"action" => "labeled", "label" => gh_label, "repository" => gh_repo} = params) do
+  def handle_incoming(
+        :github,
+        %{"action" => "labeled", "label" => gh_label, "repository" => gh_repo} = params
+      ) do
     %Event{
       source: :github,
       action: :labeled_issue,
@@ -74,7 +82,10 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
-  def handle_incoming(:github, %{"action" => "unlabeled", "label" => gh_label, "repository" => gh_repo} = params) do
+  def handle_incoming(
+        :github,
+        %{"action" => "unlabeled", "label" => gh_label, "repository" => gh_repo} = params
+      ) do
     %Event{
       source: :github,
       action: :unlabeled_issue,
@@ -98,7 +109,10 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
-  def handle_incoming(:linear, %{"action" => "update", "type" => "Issue", "data" => ln_issue} = params) do
+  def handle_incoming(
+        :linear,
+        %{"action" => "update", "type" => "Issue", "data" => ln_issue} = params
+      ) do
     %Event{
       source: :linear,
       action: :updated_issue,
@@ -111,7 +125,11 @@ defmodule Linear.Synchronize do
     |> SyncEngine.handle_event()
   end
 
-  def handle_incoming(:linear, %{"action" => "create", "type" => "Comment", "data" => %{"issue" => ln_issue} = ln_comment}) do
+  def handle_incoming(:linear, %{
+        "action" => "create",
+        "type" => "Comment",
+        "data" => %{"issue" => ln_issue} = ln_comment
+      }) do
     %Event{
       source: :linear,
       action: :created_comment,
@@ -124,6 +142,6 @@ defmodule Linear.Synchronize do
   end
 
   def handle_incoming(scope, params) do
-    Logger.warn "Unhandled action in scope #{scope} => #{params["action"] || "?"}"
+    Logger.warn("Unhandled action in scope #{scope} => #{params["action"] || "?"}")
   end
 end

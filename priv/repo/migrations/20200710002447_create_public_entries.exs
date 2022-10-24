@@ -11,7 +11,9 @@ defmodule Linear.Repo.Migrations.CreatePublicEntries do
       add :label_id, :binary_id
       add :project_id, :binary_id
       add :assign_self, :boolean, default: false, null: false
-      add :account_id, references(:accounts, on_delete: :delete_all, type: :binary_id), null: false
+
+      add :account_id, references(:accounts, on_delete: :delete_all, type: :binary_id),
+        null: false
 
       timestamps()
     end

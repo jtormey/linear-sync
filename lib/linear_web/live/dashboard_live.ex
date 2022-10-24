@@ -11,10 +11,11 @@ defmodule LinearWeb.DashboardLive do
     account = Accounts.get_account!(account_id)
     issue_syncs = Data.list_issue_syncs(account)
 
-    socket = socket
-    |> assign(:page_title, "Account")
-    |> assign(:account, account)
-    |> assign(:issue_syncs, issue_syncs)
+    socket =
+      socket
+      |> assign(:page_title, "Account")
+      |> assign(:account, account)
+      |> assign(:issue_syncs, issue_syncs)
 
     {:ok, socket}
   end
@@ -33,7 +34,7 @@ defmodule LinearWeb.DashboardLive do
         {:noreply, assign(socket, :issue_syncs, Data.list_issue_syncs(account))}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to enable issue sync (#{inspect reason})")}
+        {:noreply, put_flash(socket, :error, "Failed to enable issue sync (#{inspect(reason)})")}
     end
   end
 
@@ -46,7 +47,7 @@ defmodule LinearWeb.DashboardLive do
         {:noreply, assign(socket, :issue_syncs, Data.list_issue_syncs(account))}
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to disable issue sync (#{inspect reason})")}
+        {:noreply, put_flash(socket, :error, "Failed to disable issue sync (#{inspect(reason)})")}
     end
   end
 

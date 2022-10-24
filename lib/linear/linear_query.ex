@@ -5,7 +5,7 @@ defmodule Linear.LinearQuery do
   alias Linear.LinearAPI.Session
   alias Linear.LinearAPI.LinearData, as: Ln
 
-  @linear_api Application.get_env(:linear, :linear_api, LinearAPI)
+  @linear_api Application.compile_env(:linear, :linear_api, LinearAPI)
 
   @doc """
   Gets an issue in Linear by ID, i.e. "ABC-12"
@@ -18,7 +18,7 @@ defmodule Linear.LinearQuery do
         {:ok, issue}
 
       error ->
-        Logger.error("Error getting Linear issue by ID, #{inspect error}")
+        Logger.error("Error getting Linear issue by ID, #{inspect(error)}")
         :error
     end
   end
@@ -34,7 +34,7 @@ defmodule Linear.LinearQuery do
         {:ok, attrs}
 
       error ->
-        Logger.error("Error syncing Github issue to Linear, #{inspect error}")
+        Logger.error("Error syncing Github issue to Linear, #{inspect(error)}")
         :error
     end
   end
@@ -57,7 +57,7 @@ defmodule Linear.LinearQuery do
         :ok
 
       error ->
-        Logger.error("Error updating Linear issue, #{inspect error}")
+        Logger.error("Error updating Linear issue, #{inspect(error)}")
         :error
     end
   end
@@ -80,7 +80,7 @@ defmodule Linear.LinearQuery do
         {:ok, attrs}
 
       error ->
-        Logger.error("Error creating Linear issue comment, #{inspect error}")
+        Logger.error("Error creating Linear issue comment, #{inspect(error)}")
         :error
     end
   end
@@ -99,7 +99,7 @@ defmodule Linear.LinearQuery do
         {:ok, issue["labels"]["nodes"]}
 
       error ->
-        Logger.error("Error listing Linear issue label ids, #{inspect error}")
+        Logger.error("Error listing Linear issue label ids, #{inspect(error)}")
         :error
     end
   end
@@ -115,7 +115,7 @@ defmodule Linear.LinearQuery do
         {:ok, issue_labels}
 
       error ->
-        Logger.error("Error listing Linear labels, #{inspect error}")
+        Logger.error("Error listing Linear labels, #{inspect(error)}")
         :error
     end
   end

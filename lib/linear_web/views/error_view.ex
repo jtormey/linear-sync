@@ -1,5 +1,5 @@
-defmodule LinearWeb.ErrorView do
-  use LinearWeb, :view
+defmodule LinearWeb.ErrorHTML do
+  use LinearWeb, :html
 
   # If you want to customize a particular status code
   # for a certain format, you may uncomment below.

@@ -18,14 +18,16 @@ defmodule Linear.Webhooks do
   none exist.
   """
   def get_webhook(:linear, %IssueSync{} = issue_sync) do
-    Repo.get_by LinearWebhook,
+    Repo.get_by(LinearWebhook,
       team_id: issue_sync.team_id
+    )
   end
 
   def get_webhook(:github, %IssueSync{} = issue_sync) do
-    Repo.get_by GithubWebhook,
+    Repo.get_by(GithubWebhook,
       repo_owner: issue_sync.repo_owner,
       repo_name: issue_sync.repo_name
+    )
   end
 
   @doc """
@@ -33,16 +35,18 @@ defmodule Linear.Webhooks do
   """
   def list_webhooks(%Account{} = account) do
     query_webhooks = fn query ->
-      Repo.all from webhook in query,
-        join: issue_sync in assoc(webhook, :issue_syncs),
-        where: issue_sync.account_id == ^account.id,
-        order_by: {:desc, :inserted_at},
-        preload: [issue_syncs: issue_sync]
+      Repo.all(
+        from webhook in query,
+          join: issue_sync in assoc(webhook, :issue_syncs),
+          where: issue_sync.account_id == ^account.id,
+          order_by: {:desc, :inserted_at},
+          preload: [issue_syncs: issue_sync]
+      )
     end
 
     %{
-      linear: query_webhooks.(from LinearWebhook),
-      github: query_webhooks.(from GithubWebhook)
+      linear: query_webhooks.(from(LinearWebhook)),
+      github: query_webhooks.(from(GithubWebhook))
     }
   end
 
@@ -53,7 +57,7 @@ defmodule Linear.Webhooks do
   def create_webhook(scope, %IssueSync{} = issue_sync) do
     issue_sync = Repo.preload(issue_sync, [:account])
 
-    Repo.transaction fn ->
+    Repo.transaction(fn ->
       with {:ok, nil} <- {:ok, get_webhook(scope, issue_sync)},
            {:ok, webhook} <- do_create_webhook(scope, issue_sync),
            {:ok, webhook_id} <- install_webhook(scope, issue_sync),
@@ -66,20 +70,30 @@ defmodule Linear.Webhooks do
         {:error, reason} ->
           Repo.rollback(reason)
       end
-    end
+    end)
   end
 
   defp install_webhook(:linear, %IssueSync{} = issue_sync) do
-    result = LinearAPI.create_webhook LinearAPI.Session.new(issue_sync.account),
-      url: Routes.linear_webhook_url(LinearWeb.Endpoint, :handle),
-      teamId: issue_sync.team_id
+    result =
+      LinearAPI.create_webhook(LinearAPI.Session.new(issue_sync.account),
+        url: Routes.linear_webhook_url(LinearWeb.Endpoint, :handle),
+        teamId: issue_sync.team_id
+      )
 
     case result do
-      {:ok, %{"data" => %{"webhookCreate" => %{"success" => true, "webhook" => %{"id" => webhook_id, "enabled" => true}}}}} ->
+      {:ok,
+       %{
+         "data" => %{
+           "webhookCreate" => %{
+             "success" => true,
+             "webhook" => %{"id" => webhook_id, "enabled" => true}
+           }
+         }
+       }} ->
         {:ok, webhook_id}
 
       error ->
-        Logger.error("Failed to enable Linear webhook, #{inspect error}")
+        Logger.error("Failed to enable Linear webhook, #{inspect(error)}")
         {:error, :linear_webhook_enable_failure}
     end
   end
@@ -88,16 +102,19 @@ defmodule Linear.Webhooks do
     client = GithubAPI.client(issue_sync.account)
     repo_key = GithubAPI.to_repo_key!(issue_sync)
 
-    result = GithubAPI.create_webhook client, repo_key,
-      url: Routes.github_webhook_url(LinearWeb.Endpoint, :handle),
-      secret: "secret" # TODO: Secure secret
+    result =
+      GithubAPI.create_webhook(client, repo_key,
+        url: Routes.github_webhook_url(LinearWeb.Endpoint, :handle),
+        # TODO: Secure secret
+        secret: "secret"
+      )
 
     case result do
       {201, %{"active" => true, "id" => webhook_id}, _response} ->
         {:ok, webhook_id}
 
       {_status, error, _response} ->
-        Logger.error("Failed to enable Github webhook, #{inspect error}")
+        Logger.error("Failed to enable Github webhook, #{inspect(error)}")
         {:error, :github_webhook_enable_failure}
     end
   end
@@ -132,25 +149,27 @@ defmodule Linear.Webhooks do
   def delete_webhook(%_Webhook{} = webhook, %IssueSync{} = issue_sync) do
     issue_sync = Repo.preload(issue_sync, [:account])
 
-    Repo.transaction fn ->
+    Repo.transaction(fn ->
       with :ok <- check_webhook_references(webhook),
            {:ok, _webhook} <- Repo.delete(webhook),
            :ok <- uninstall_webhook(webhook, issue_sync) do
         webhook
       else
         {:error, :webhook_has_references} ->
-          Logger.info("Webhook has existing references, not deleting #{inspect webhook}")
+          Logger.info("Webhook has existing references, not deleting #{inspect(webhook)}")
           webhook
 
         {:error, reason} ->
           Repo.rollback(reason)
       end
-    end
+    end)
   end
 
   defp uninstall_webhook(%LinearWebhook{} = linear_webhook, %IssueSync{} = issue_sync) do
-    result = LinearAPI.delete_webhook LinearAPI.Session.new(issue_sync.account),
-      id: linear_webhook.webhook_id
+    result =
+      LinearAPI.delete_webhook(LinearAPI.Session.new(issue_sync.account),
+        id: linear_webhook.webhook_id
+      )
 
     case result do
       {:ok, %{"data" => %{"webhookDelete" => %{"success" => true}}}} ->
@@ -160,7 +179,7 @@ defmodule Linear.Webhooks do
         :ok
 
       error ->
-        Logger.error("Failed to disable Linear webhook, #{inspect error}")
+        Logger.error("Failed to disable Linear webhook, #{inspect(error)}")
         {:error, :linear_webhook_disable_failure}
     end
   end
@@ -169,8 +188,7 @@ defmodule Linear.Webhooks do
     client = GithubAPI.client(issue_sync.account)
     repo_key = GithubAPI.to_repo_key!(github_webhook)
 
-    result = GithubAPI.delete_webhook client, repo_key,
-      hook_id: github_webhook.webhook_id
+    result = GithubAPI.delete_webhook(client, repo_key, hook_id: github_webhook.webhook_id)
 
     case result do
       {204, _body, _response} ->
@@ -180,7 +198,7 @@ defmodule Linear.Webhooks do
         :ok
 
       {_status, error, _response} ->
-        Logger.error("Failed to disable Github webhook, #{inspect error}")
+        Logger.error("Failed to disable Github webhook, #{inspect(error)}")
         {:error, :github_webhook_disable_failure}
     end
   end
@@ -197,14 +215,18 @@ defmodule Linear.Webhooks do
   end
 
   defp webhook_has_references?(%LinearWebhook{} = linear_webhook) do
-    Repo.one from issue_sync in IssueSync,
-      where: [linear_internal_webhook_id: ^linear_webhook.id],
-      select: count(issue_sync) > 0
+    Repo.one(
+      from issue_sync in IssueSync,
+        where: [linear_internal_webhook_id: ^linear_webhook.id],
+        select: count(issue_sync) > 0
+    )
   end
 
   defp webhook_has_references?(%GithubWebhook{} = github_webhook) do
-    Repo.one from issue_sync in IssueSync,
-      where: [github_internal_webhook_id: ^github_webhook.id],
-      select: count(issue_sync) > 0
+    Repo.one(
+      from issue_sync in IssueSync,
+        where: [github_internal_webhook_id: ^github_webhook.id],
+        select: count(issue_sync) > 0
+    )
   end
 end

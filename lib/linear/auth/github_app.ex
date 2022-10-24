@@ -5,7 +5,7 @@ defmodule Linear.Auth.GithubApp do
   @apps_url "https://github.com/apps"
 
   def client() do
-    OAuth2.Client.new([
+    OAuth2.Client.new(
       strategy: __MODULE__,
       client_id: fetch_env!(:client_id),
       client_secret: fetch_env!(:client_secret),
@@ -13,7 +13,7 @@ defmodule Linear.Auth.GithubApp do
       site: "https://api.github.com",
       authorize_url: "https://github.com/login/oauth/authorize",
       token_url: "https://github.com/login/oauth/access_token"
-    ])
+    )
     |> OAuth2.Client.put_serializer("application/json", Jason)
   end
 
@@ -41,10 +41,8 @@ defmodule Linear.Auth.GithubApp do
   def delete_app_authorization!(installation_id) when is_binary(installation_id) do
     HTTPoison.delete!(
       @api_url <> "/app/installations/#{installation_id}",
-      [
-        accept: "application/vnd.github.v3+json",
-        authorization: jwt_header()
-      ]
+      accept: "application/vnd.github.v3+json",
+      authorization: jwt_header()
     )
   end
 

@@ -57,7 +57,11 @@ defmodule Linear.Actions.CreateLinearIssue do
     sync_github_issue_titles_actions =
       if issue_sync.sync_github_issue_titles do
         Actions.UpdateGithubIssue.new(%{
-          title: ContentWriter.github_issue_title_from_linear(context.github_issue.title, context.linear_issue)
+          title:
+            ContentWriter.github_issue_title_from_linear(
+              context.github_issue.title,
+              context.linear_issue
+            )
         })
       end
 

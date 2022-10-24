@@ -7,8 +7,12 @@
 
     <p class="text-dark-500 text-sm mb-8">
       LinearSync needs to connect to your GitHub account in order to sync issues
-      between Linear and GitHub. You will have full control over this process. Or,
-      <%= link "go back", to: Routes.session_path(@socket, :delete), method: :delete, class: "underline" %>.
+      between Linear and GitHub. You will have full control over this process. Or, <%= link(
+        "go back",
+        to: Routes.session_path(@socket, :delete),
+        method: :delete,
+        class: "underline"
+      ) %>.
     </p>
 
     <%= if @linking? do %>
@@ -16,7 +20,17 @@
         Linking in progress...
       </button>
     <% else %>
-      <button type="button" name="button" class="el-button" phx-hook="open-window" data-event="link_start" data-window-url="<%= @auth_github_path %>" data-window-title="Link GitHub" data-window-dimensions="1020:780:center">
+      <button
+        type="button"
+        name="button"
+        class="el-button"
+        id="open-window-button"
+        phx-hook="open-window"
+        data-event="link_start"
+        data-window-url={@auth_github_path}
+        data-window-title="Link GitHub"
+        data-window-dimensions="1020:780:center"
+      >
         Link GitHub account
       </button>
     <% end %>

@@ -18,7 +18,8 @@ defmodule Linear.Actions.RemoveGithubLabels do
 
     repo_labels_to_remove =
       Enum.filter(repo_labels, fn %Gh.Label{} = repo_label ->
-        if ln_label = Enum.find(linear_labels, &Helpers.Labels.labels_match?(&1.name, repo_label.name)) do
+        if ln_label =
+             Enum.find(linear_labels, &Helpers.Labels.labels_match?(&1.name, repo_label.name)) do
           ln_label.id in action.label_ids and repo_label.id in issue_label_ids
         end
       end)

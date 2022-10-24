@@ -16,30 +16,34 @@ defmodule LinearWeb.NewIssueSyncLive do
     session = LinearAPI.Session.new(account.api_key)
     client = Tentacat.Client.new(%{access_token: account.github_token})
 
-    {:ok, %{"data" => %{"viewer" => viewer, "teams" => %{"nodes" => teams}}}} = LinearAPI.viewer_teams(session)
+    {:ok, %{"data" => %{"viewer" => viewer, "teams" => %{"nodes" => teams}}}} =
+      LinearAPI.viewer_teams(session)
+
     {200, repos, _response} = Tentacat.Repositories.list_mine(client)
 
-    socket = socket
-    |> assign(:page_title, "New Issue Sync")
-    |> assign(:account, account)
-    |> assign(:session, session)
-    |> assign(:client, client)
-    |> assign(:viewer, viewer)
-    |> assign(:repos, Enum.map(repos, &repo_to_option/1))
-    |> assign(:teams, Enum.map(teams, &decode_kv/1))
-    |> assign(:labels, [])
-    |> assign(:states, [])
-    |> assign(:members, [])
-    |> assign(:changeset, IssueSync.assoc_changeset(%IssueSync{}, account, %{}))
+    socket =
+      socket
+      |> assign(:page_title, "New Issue Sync")
+      |> assign(:account, account)
+      |> assign(:session, session)
+      |> assign(:client, client)
+      |> assign(:viewer, viewer)
+      |> assign(:repos, Enum.map(repos, &repo_to_option/1))
+      |> assign(:teams, Enum.map(teams, &decode_kv/1))
+      |> assign(:labels, [])
+      |> assign(:states, [])
+      |> assign(:members, [])
+      |> assign(:changeset, IssueSync.assoc_changeset(%IssueSync{}, account, %{}))
 
     {:ok, socket}
   end
 
   @impl true
   def handle_event("validate", %{"issue_sync" => attrs}, socket) do
-    socket = socket
-    |> load_team(attrs["team_id"])
-    |> assign(:changeset, build_changeset(socket, attrs) |> Map.put(:action, :insert))
+    socket =
+      socket
+      |> load_team(attrs["team_id"])
+      |> assign(:changeset, build_changeset(socket, attrs) |> Map.put(:action, :insert))
 
     {:noreply, socket}
   end
@@ -60,16 +64,16 @@ defmodule LinearWeb.NewIssueSyncLive do
     repo_id = Ecto.Changeset.fetch_change!(changeset, :repo_id)
     team_id = Ecto.Changeset.fetch_change!(changeset, :team_id)
 
-    with {:ok, %{enabled: true} = issue_sync} <- {:ok, Data.get_issue_sync_by!(repo_id: repo_id, team_id: team_id)},
+    with {:ok, %{enabled: true} = issue_sync} <-
+           {:ok, Data.get_issue_sync_by!(repo_id: repo_id, team_id: team_id)},
          {:error, reason} <- IssueSyncService.disable_issue_sync(issue_sync) do
-      Logger.error("Failed to delete existing issue sync: #{inspect reason}")
+      Logger.error("Failed to delete existing issue sync: #{inspect(reason)}")
     else
       {:ok, issue_sync} ->
         Data.delete_issue_sync(issue_sync)
     end
 
-    changeset =
-      IssueSync.assoc_changeset(%IssueSync{}, account, changeset.changes)
+    changeset = IssueSync.assoc_changeset(%IssueSync{}, account, changeset.changes)
 
     {:noreply, assign(socket, :changeset, changeset)}
   end
@@ -96,7 +100,8 @@ defmodule LinearWeb.NewIssueSyncLive do
   def load_team(socket = %{assigns: %{team_id: team_id}}, team_id), do: socket
 
   def load_team(socket, team_id) do
-    {:ok, %{"data" => %{"team" => result}}} = LinearAPI.new_issue_sync_data(socket.assigns.session, team_id)
+    {:ok, %{"data" => %{"team" => result}}} =
+      LinearAPI.new_issue_sync_data(socket.assigns.session, team_id)
 
     socket
     |> assign(:team_id, team_id)
@@ -135,6 +140,7 @@ defmodule LinearWeb.NewIssueSyncLive do
     case attrs do
       %{"repo_id" => repo_id} ->
         repo = Enum.find(socket.assigns.repos, &(to_string(&1[:value]) == repo_id))
+
         attrs
         |> Map.put("repo_id", repo[:value])
         |> Map.put("repo_owner", repo[:owner])

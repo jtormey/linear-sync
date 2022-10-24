@@ -36,8 +36,7 @@ defmodule Linear.Actions.UpdateLinearIssue do
       |> Enum.map(&Helpers.Labels.get_corresponding_linear_label(&1, context.linear_labels))
       |> Helpers.Labels.to_label_mapset()
 
-    current_label_ids =
-      Helpers.Labels.to_label_mapset(context.linear_issue.labels)
+    current_label_ids = Helpers.Labels.to_label_mapset(context.linear_issue.labels)
 
     updated_label_ids =
       current_label_ids

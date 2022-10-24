@@ -10,11 +10,12 @@ defmodule LinearWeb.LinkGithubLive do
       %Account{github_token: nil} = account ->
         Accounts.subscribe(account)
 
-        {:ok, assign(socket,
-          page_title: "Link GitHub",
-          linking?: false,
-          auth_github_path: Routes.auth_github_app_path(socket, :pre_auth)
-        )}
+        {:ok,
+         assign(socket,
+           page_title: "Link GitHub",
+           linking?: false,
+           auth_github_path: Routes.auth_github_app_path(socket, :pre_auth)
+         )}
 
       %Account{} ->
         {:ok, push_redirect(socket, to: Routes.dashboard_path(socket, :index))}

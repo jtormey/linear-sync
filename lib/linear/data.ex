@@ -14,9 +14,11 @@ defmodule Linear.Data do
   Returns the list of issue_syncs for an account.
   """
   def list_issue_syncs(account = %Account{}) do
-    Repo.all from i in IssueSync,
-      where: [account_id: ^account.id],
-      order_by: {:desc, :inserted_at}
+    Repo.all(
+      from i in IssueSync,
+        where: [account_id: ^account.id],
+        order_by: {:desc, :inserted_at}
+    )
   end
 
   @doc """
@@ -29,25 +31,31 @@ defmodule Linear.Data do
   def get_issue_sync_by!(opts), do: Repo.get_by!(IssueSync, opts) |> Repo.preload([:account])
 
   def list_issue_syncs_by_repo_id(repo_id) do
-    Repo.all from i in IssueSync,
-      join: a in assoc(i, :account),
-      where: i.repo_id == ^repo_id and i.enabled == true,
-      preload: [account: a]
+    Repo.all(
+      from i in IssueSync,
+        join: a in assoc(i, :account),
+        where: i.repo_id == ^repo_id and i.enabled == true,
+        preload: [account: a]
+    )
   end
 
   def list_issue_syncs_by_team_id(team_id) do
-    Repo.all from i in IssueSync,
-      join: a in assoc(i, :account),
-      where: i.team_id == ^team_id and i.enabled == true,
-      preload: [account: a]
+    Repo.all(
+      from i in IssueSync,
+        join: a in assoc(i, :account),
+        where: i.team_id == ^team_id and i.enabled == true,
+        preload: [account: a]
+    )
   end
 
   def list_issue_syncs_by_linear_issue_id(linear_issue_id) do
-    Repo.all from i in IssueSync,
-      join: a in assoc(i, :account),
-      join: s in assoc(i, :shared_issues),
-      where: s.linear_issue_id == ^linear_issue_id and i.enabled == true,
-      preload: [account: a]
+    Repo.all(
+      from i in IssueSync,
+        join: a in assoc(i, :account),
+        join: s in assoc(i, :shared_issues),
+        where: s.linear_issue_id == ^linear_issue_id and i.enabled == true,
+        preload: [account: a]
+    )
   end
 
   @doc """
@@ -72,10 +80,10 @@ defmodule Linear.Data do
   Marks an issue_sync as enabled and associates webhooks.
   """
   def enable_issue_sync(
-    %IssueSync{enabled: false} = issue_sync,
-    %LinearWebhook{} = linear_webhook,
-    %GithubWebhook{} = github_webhook
-  ) do
+        %IssueSync{enabled: false} = issue_sync,
+        %LinearWebhook{} = linear_webhook,
+        %GithubWebhook{} = github_webhook
+      ) do
     issue_sync
     |> Ecto.Changeset.change(enabled: true)
     |> Ecto.Changeset.put_assoc(:linear_internal_webhook, linear_webhook)
@@ -105,8 +113,11 @@ defmodule Linear.Data do
   Deletes all issue_syncs for an account.
   """
   def delete_disabled_issue_syncs_for_account(%Account{} = account) do
-    Repo.delete_all from i in IssueSync,
-      where: [account_id: ^account.id, enabled: false]
+    Repo.delete_all(
+      from i in IssueSync,
+        where: [account_id: ^account.id, enabled: false]
+    )
+
     :ok
   end
 
