@@ -22,7 +22,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
+RUN apt-get update -y && apt-get install -y build-essential nodejs npm git \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -46,6 +46,11 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
+RUN npm cache verify
+
+COPY assets/package.json assets/package-lock.json ./assets/
+RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+
 COPY priv priv
 
 COPY lib lib
@@ -58,8 +63,8 @@ RUN mix assets.deploy
 # Compile the release
 RUN mix compile
 
-# Changes to config/runtime.exs don't require recompiling the code
-COPY config/runtime.exs config/
+# Changes to config/releases.exs don't require recompiling the code
+COPY config/releases.exs config/
 
 COPY rel rel
 RUN mix release

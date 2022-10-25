@@ -74,6 +74,7 @@ defmodule Linear.MixProject do
       setup: ["deps.get", "ecto.setup", "cmd npm install --prefix assets"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "assets.deploy": ["cmd npm run deploy --prefix assets", "phx.digest"],
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
