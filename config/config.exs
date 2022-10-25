@@ -20,7 +20,7 @@ config :linear, Linear.Repo,
 config :linear, LinearWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "xCQwaiDYqj3vZmL55d8+oVDk21+6kbx9mHKgXb5wl370QEZ1/ukPmwGBeX5BnyPR",
-  render_errors: [view: LinearWeb.ErrorView, accepts: ~w(html json), layout: false],
+  render_errors: [view: LinearWeb.ErrorHTML, accepts: ~w(html json), layout: false],
   pubsub_server: Linear.PubSub,
   live_view: [signing_salt: "1jIiBu4B"]
 

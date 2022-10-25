@@ -1,4 +1,4 @@
-defmodule LinearWeb.ErrorViewTest do
+defmodule LinearWeb.ErrorHTMLTest do
   use LinearWeb.ConnCase, async: true
 
   test "renders 404.html" do
